@@ -52,6 +52,13 @@ describe("parseTimeoutMs", () => {
     expect(parseTimeoutMs("")).toBeUndefined();
     expect(parseTimeoutMs("forever")).toBeUndefined();
   });
+
+  test("returns undefined when the suffix matches but the prefix is not numeric", () => {
+    // Regression: this used to leak `NaN` into spawnSync's timeout option.
+    expect(parseTimeoutMs("abcms")).toBeUndefined();
+    expect(parseTimeoutMs("abcs")).toBeUndefined();
+    expect(parseTimeoutMs("abcm")).toBeUndefined();
+  });
 });
 
 describe("serveIO", () => {

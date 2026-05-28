@@ -118,6 +118,19 @@ describe("runExecution", () => {
     );
   });
 
+  test("scenario with examples rejects out-of-range example index", () => {
+    // Regression: TS used to silently return an empty example object when the
+    // example index was past the end, masking the bug behind a misleading
+    // "missing example values" error. Now it fails fast.
+    const reg = new Registry();
+    reg.step("a fresh calculator", () => {});
+    reg.step("I add <a> and <b>", () => {});
+    reg.step("the result is <sum>", () => {});
+    expect(() => runExecution(writeIR(calculatorPayload()), 0, 99, reg)).toThrow(
+      /example index 99 out of range/,
+    );
+  });
+
   test("uses default registry when none provided", async () => {
     const { defaultRegistry } = await import("../src/registry.js");
     let called = false;

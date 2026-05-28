@@ -24,6 +24,11 @@ function exampleFor(scenario: Scenario, exampleIndex: number): Record<string, st
     }
     return {};
   }
+  if (exampleIndex < 0 || exampleIndex >= scenario.examples.length) {
+    throw new Error(
+      `example index ${exampleIndex} out of range for scenario "${scenario.name}"; feature has ${scenario.examples.length} examples`,
+    );
+  }
   return { ...scenario.examples[exampleIndex] };
 }
 

@@ -111,6 +111,35 @@ fn load_failure_propagates() {
     assert!(result.is_err());
 }
 
+#[test]
+fn embeds_ir_path_as_a_properly_escaped_rust_string_literal() {
+    // Regression: the generator used to splice the IR path between literal
+    // quote characters with no escaping. {:?} on a &str is the right tool
+    // (Rust's analogue of Go's %q, Python's repr(), TS's JSON.stringify).
+    let tmp = tempdir();
+    let ir_dir = tmp.path().join("strange \"quoted\\path");
+    fs::create_dir_all(&ir_dir).unwrap();
+    let ir = ir_dir.join("ir.json");
+    write_ir(
+        &ir,
+        r#"{"name":"F","scenarios":[{"name":"s","steps":[{"keyword":"Then","text":"ok"}],"examples":[]}]}"#,
+    );
+    let out = tmp.path().join("out");
+    let files = generate(GenerateOptions {
+        ir_path: &ir,
+        output_dir: &out,
+        feature_path: Some("features/f.feature"),
+        handlers_crate: "handlers",
+    })
+    .unwrap();
+    let body = fs::read_to_string(&files[0]).unwrap();
+    // The IR path appears inside `String::from(...)`. Both the quote and the
+    // backslash in the directory name must come through as escaped.
+    assert!(body.contains("String::from(\""));
+    assert!(body.contains(r#"\""#));
+    assert!(body.contains(r"\\"));
+}
+
 struct TempDir(std::path::PathBuf);
 impl TempDir {
     fn path(&self) -> &std::path::Path { &self.0 }

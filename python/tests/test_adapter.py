@@ -4,7 +4,6 @@ to stdout; we drive it with StringIO so the test stays hermetic and fast.
 import io
 import json
 import sys
-from typing import Iterator
 
 import pytest
 

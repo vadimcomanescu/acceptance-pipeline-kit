@@ -62,11 +62,12 @@ pub fn generate(opts: GenerateOptions<'_>) -> Result<Vec<PathBuf>, String> {
     body.push_str("static INIT: Once = Once::new();\n\n");
     body.push_str("fn ensure_registered() {\n    INIT.call_once(|| { register_handlers(); });\n}\n\n");
     body.push_str("fn ir_path() -> String {\n");
-    body.push_str(
-        "    std::env::var(\"APS_IR_PATH\").unwrap_or_else(|_| String::from(\""
-    );
-    body.push_str(&opts.ir_path.to_string_lossy());
-    body.push_str("\"))\n}\n\n");
+    body.push_str("    std::env::var(\"APS_IR_PATH\").unwrap_or_else(|_| String::from(");
+    // {:?} on a &str produces a properly-escaped Rust string literal,
+    // including surrounding quotes. This is the Rust analogue of Go's %q,
+    // Python's repr(), and TS's JSON.stringify for embedding paths in code.
+    body.push_str(&format!("{:?}", opts.ir_path.to_string_lossy()));
+    body.push_str("))\n}\n\n");
 
     for (s_idx, e_idx) in executions_for(&feature) {
         let scenario_name = safe_identifier(&feature.scenarios[s_idx].name);

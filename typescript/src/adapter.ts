@@ -34,11 +34,14 @@ export function classifyExit(
 export function parseTimeoutMs(s: string | undefined): number | undefined {
   if (!s) return undefined;
   const trimmed = s.trim();
-  if (trimmed.endsWith("ms")) return Number(trimmed.slice(0, -2));
-  if (trimmed.endsWith("s")) return Number(trimmed.slice(0, -1)) * 1000;
-  if (trimmed.endsWith("m")) return Number(trimmed.slice(0, -1)) * 60_000;
-  const n = Number(trimmed);
-  return Number.isFinite(n) ? n * 1000 : undefined;
+  const parse = (text: string, scale: number): number | undefined => {
+    const n = Number(text);
+    return Number.isFinite(n) ? n * scale : undefined;
+  };
+  if (trimmed.endsWith("ms")) return parse(trimmed.slice(0, -2), 1);
+  if (trimmed.endsWith("s")) return parse(trimmed.slice(0, -1), 1000);
+  if (trimmed.endsWith("m")) return parse(trimmed.slice(0, -1), 60_000);
+  return parse(trimmed, 1000);
 }
 
 export interface ServeOptions {

@@ -6,6 +6,7 @@
 //! `github.com/unclebob/Acceptance-Pipeline-Specification`.
 
 pub mod adapter;
+pub mod cli;
 pub mod generator;
 pub mod ir;
 pub mod metadata;

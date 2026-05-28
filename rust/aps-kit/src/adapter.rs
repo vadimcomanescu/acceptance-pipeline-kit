@@ -26,7 +26,8 @@ pub struct JobResponse {
     pub duration: u128,
 }
 
-fn parse_timeout(s: &str) -> Option<Duration> {
+// Public so unit tests can pin duration parsing without subprocess setup.
+pub fn parse_timeout(s: &str) -> Option<Duration> {
     let trimmed = s.trim();
     if trimmed.is_empty() {
         return None;
@@ -43,7 +44,8 @@ fn parse_timeout(s: &str) -> Option<Duration> {
     trimmed.parse::<f64>().ok().map(Duration::from_secs_f64)
 }
 
-fn classify(code: Option<i32>, killed: bool) -> &'static str {
+// Public so unit tests can pin classification semantics without subprocess setup.
+pub fn classify(code: Option<i32>, killed: bool) -> &'static str {
     if killed {
         return "infrastructure_error";
     }
@@ -142,15 +144,34 @@ fn wait_with_timeout(
 }
 
 /// Loops reading NDJSON job requests from stdin and writing NDJSON responses to
-/// stdout. Diagnostics go to stderr.
+/// stdout. Diagnostics go to stderr. Thin shell over `serve_io` so the binary
+/// has no logic the tests can't reach.
 pub fn serve(opts: AdapterOptions) -> Result<(), String> {
+    let stdin = std::io::stdin();
+    let stdout = std::io::stdout();
+    let stderr = std::io::stderr();
+    serve_io(opts, stdin.lock(), stdout.lock(), stderr.lock())
+}
+
+/// `serve` with injected I/O. Reads NDJSON job requests from `input`, writes
+/// NDJSON responses to `output`, and routes diagnostics to `diagnostics`.
+/// Tests drive this directly with byte vectors so the protocol behaviour is
+/// fully covered.
+pub fn serve_io<R, W, E>(
+    opts: AdapterOptions,
+    input: R,
+    mut output: W,
+    mut diagnostics: E,
+) -> Result<(), String>
+where
+    R: BufRead,
+    W: Write,
+    E: Write,
+{
     if opts.command.is_empty() {
         return Err("empty test command".into());
     }
-    let stdin = std::io::stdin();
-    let stdout = std::io::stdout();
-    let mut out = stdout.lock();
-    for line in stdin.lock().lines() {
+    for line in input.lines() {
         let line = line.map_err(|e| e.to_string())?;
         let trimmed = line.trim();
         if trimmed.is_empty() {
@@ -159,14 +180,14 @@ pub fn serve(opts: AdapterOptions) -> Result<(), String> {
         let job: JobRequest = match serde_json::from_str(trimmed) {
             Ok(j) => j,
             Err(e) => {
-                eprintln!("aps-adapter: bad job line: {e}");
+                writeln!(diagnostics, "aps-adapter: bad job line: {e}").ok();
                 continue;
             }
         };
         let resp = run_one(&job, &opts);
         let encoded = serde_json::to_string(&resp).map_err(|e| e.to_string())?;
-        writeln!(out, "{encoded}").map_err(|e| e.to_string())?;
-        out.flush().map_err(|e| e.to_string())?;
+        writeln!(output, "{encoded}").map_err(|e| e.to_string())?;
+        output.flush().map_err(|e| e.to_string())?;
     }
     Ok(())
 }

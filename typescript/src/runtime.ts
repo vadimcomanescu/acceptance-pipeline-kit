@@ -33,13 +33,16 @@ function runStep(
   example: Record<string, string>,
   registry: Registry,
 ): void {
+  // Resolve the handler first so an unsupported step gives the most useful
+  // error before we check anything else; then validate required example
+  // values; then invoke. Same order in all four language runtimes.
+  const handler = registry.resolve(step.text);
   const missing = step.parameters.filter((p) => !(p in example));
   if (missing.length > 0) {
     throw new Error(
       `step "${step.text}" references missing example values: ${missing.join(", ")}`,
     );
   }
-  const handler = registry.resolve(step.text);
   handler(world, example);
 }
 
@@ -50,7 +53,7 @@ export function runExecution(
   registry: Registry = defaultRegistry,
 ): void {
   const feature = loadIR(irPath);
-  if (scenarioIndex >= feature.scenarios.length) {
+  if (scenarioIndex < 0 || scenarioIndex >= feature.scenarios.length) {
     throw new Error(
       `scenario index ${scenarioIndex} out of range; feature has ${feature.scenarios.length} scenarios`,
     );

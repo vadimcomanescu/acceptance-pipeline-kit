@@ -1,6 +1,7 @@
 // Runner adapter: persistent NDJSON worker for gherkin-mutator.
 import { spawnSync } from "node:child_process";
 import { createInterface } from "node:readline";
+import type { Readable, Writable } from "node:stream";
 
 interface JobRequest {
   id: string;
@@ -18,16 +19,19 @@ interface JobResponse {
   duration: number;
 }
 
-function classifyVitest(status: number | null): JobResponse["outcome"] {
+// Public so tests pin classification semantics without subprocess setup.
+export function classifyExit(
+  status: number | null,
+): JobResponse["outcome"] {
+  // Spec contract: exit 0 = test_success, exit 1 = test_failure, anything
+  // else (including timeout) = infrastructure_error.
   if (status === 0) return "test_success";
-  // vitest exits 1 when tests fail or fail to execute. We cannot reliably
-  // distinguish failure vs infra without parsing output; treat 1 as failure
-  // and any other non-zero as infrastructure_error.
   if (status === 1) return "test_failure";
   return "infrastructure_error";
 }
 
-function parseTimeoutMs(s: string | undefined): number | undefined {
+// Public so tests pin duration parsing without subprocess setup.
+export function parseTimeoutMs(s: string | undefined): number | undefined {
   if (!s) return undefined;
   const trimmed = s.trim();
   if (trimmed.endsWith("ms")) return Number(trimmed.slice(0, -2));
@@ -43,8 +47,20 @@ export interface ServeOptions {
   cwd?: string;
 }
 
+/** Real-world entry point: uses process.stdin / stdout / stderr. */
 export async function serve(opts: ServeOptions): Promise<void> {
-  const rl = createInterface({ input: process.stdin });
+  await serveIO(opts, process.stdin, process.stdout, process.stderr);
+}
+
+/** Testable entry point: takes injectable streams so unit tests can drive
+ *  the NDJSON protocol in-process. */
+export async function serveIO(
+  opts: ServeOptions,
+  input: Readable,
+  output: Writable,
+  diagnostics: Writable,
+): Promise<void> {
+  const rl = createInterface({ input });
   for await (const line of rl) {
     const trimmed = line.trim();
     if (!trimmed) continue;
@@ -52,11 +68,13 @@ export async function serve(opts: ServeOptions): Promise<void> {
     try {
       job = JSON.parse(trimmed);
     } catch (err) {
-      process.stderr.write(`aps-adapter: bad job line: ${err}\n`);
+      diagnostics.write(
+        `aps-adapter: bad job line: ${(err as Error).message}\n`,
+      );
       continue;
     }
     const response = runOne(job, opts);
-    process.stdout.write(JSON.stringify(response) + "\n");
+    output.write(JSON.stringify(response) + "\n");
   }
 }
 
@@ -95,7 +113,7 @@ function runOne(job: JobRequest, opts: ServeOptions): JobResponse {
   }
   return {
     id: job.id,
-    outcome: classifyVitest(proc.status),
+    outcome: classifyExit(proc.status),
     output: proc.stdout ?? "",
     error: proc.stderr ?? "",
     duration,

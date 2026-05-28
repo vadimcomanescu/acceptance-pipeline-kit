@@ -182,6 +182,77 @@ Per-language directories all follow the same shape:
   scripts/acceptance-mutation.sh          acceptance-mutation pipeline
 ```
 
+## Critical rules for writing step handlers
+
+Every language follows the same four rules. Get these right and the pipeline
+just works.
+
+1. **Match step text exactly, with placeholders kept literal.** If your feature
+   says `When I add <a> and <b>`, your handler registers against the literal
+   string `"I add <a> and <b>"`. The runtime resolves `<a>` and `<b>` from the
+   current example row at run time. Never substitute placeholders in your
+   handler key.
+
+2. **Example values are always strings.** The IR stores every example cell as
+   a string, even when it looks like a number, boolean, date, or list. Handler
+   code that does arithmetic, comparisons, or type-sensitive logic must parse
+   the string itself (`int(ex["a"])` in Python, `parseInt(ex.a, 10)` in TS,
+   etc.).
+
+3. **Step parameter names in `<...>` must exactly match column names in the
+   `Examples:` header.** Case-sensitive. A typo here surfaces as "missing
+   example value" at run time.
+
+4. **Use the `world` argument to carry state between steps within one
+   scenario execution.** Each `Given/When/Then` is a separate function call;
+   the only shared state across them is the `world` object. A fresh `world`
+   is created for each (scenario, example) pair — never carry state in module
+   globals.
+
+## Troubleshooting
+
+**`unsupported step: "..."`** — Your handler registration text does not match
+the feature step text. Causes: typo, wrong placeholders, wrong whitespace.
+Run `gherkin-parser features/foo.feature out.json && cat out.json` and copy
+the `text` field byte-for-byte into your handler.
+
+**`step "..." references missing example values: [...]`** — A `<placeholder>`
+in your step text isn't a column name in the `Examples:` table. Check
+spelling and case.
+
+**Test passes but mutation shows surviving mutations.** Your `Then` step is
+not actually asserting the example value. Make sure the handler reads
+`ex[...]` and compares it to project state.
+
+**`gherkin-parser: command not found` or similar.** Run
+`scripts/install-aps-tools.sh` once and add `$(go env GOPATH)/bin` to your
+`PATH`.
+
+**Mutator says "worker exited" for every job.** The runner adapter died
+before sending its first response. Most often: the test command inside
+`--runner-worker` wasn't found, or the quoting got mangled. The kit's
+acceptance-mutation scripts use the positional form (`aps-adapter pytest
+acceptance/generated -q`) which is robust against the mutator's
+whitespace-splitting of `--runner-worker`.
+
+**Handlers aren't picked up — every step is "unsupported".** The handlers
+module isn't being imported before the generated tests run. Re-check:
+- **Python:** `conftest.py` at project root imports your handlers module.
+- **TypeScript:** `vitest.config.ts` lists the handlers file in `setupFiles`.
+- **Go:** `acceptance/generated/handlers_init_test.go` blank-imports your
+  handlers package.
+- **Rust:** your crate exposes `pub fn register()` and the generator was run
+  with `APS_HANDLERS_CRATE=<your_crate>`.
+
+## Multiple features and handler files
+
+Drop additional `.feature` files into `features/`; the scripts process every
+file in the directory and generate one test module per feature. Handler
+files can also be split across the `handlers/` directory — as long as each
+file is imported before tests run (per the wiring above), every
+`@registry.step(...)` decorator anywhere in the project populates the
+shared `default_registry`.
+
 ## Conformance to the APS spec
 
 The kit is built strictly against the three spec docs vendored at

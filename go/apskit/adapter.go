@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -89,7 +90,7 @@ func runOne(job JobRequest, opts AdapterOptions) JobResponse {
 	cmd := exec.CommandContext(ctx, opts.Command[0], opts.Command[1:]...)
 	cmd.Dir = opts.Cwd
 	cmd.Env = append(
-		envOrCurrent(),
+		append([]string(nil), os.Environ()...),
 		"APS_IR_PATH="+job.FeatureJSON,
 		"APS_GENERATED_DIR="+job.GeneratedDir,
 		"APS_WORK_DIR="+job.WorkDir,

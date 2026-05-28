@@ -34,8 +34,10 @@ def _example_for(scenario: Scenario, example_index: int) -> dict[str, str]:
 
 
 def _run_step(step: Step, world: dict, example: dict[str, str], registry: Registry) -> None:
+    # Resolve the handler first so an unsupported step gives the most useful
+    # error before we check anything else; then validate required example
+    # values; then invoke. Same order in all four language runtimes.
     handler = registry.resolve(step.text)
-    # Validate that every parameter referenced in step text is present.
     missing = [p for p in step.parameters if p not in example]
     if missing:
         raise AssertionError(
@@ -56,7 +58,7 @@ def run_execution(
     between runs without re-importing the test module.
     """
     feature = load_ir(ir_path)
-    if scenario_index >= len(feature.scenarios):
+    if scenario_index < 0 or scenario_index >= len(feature.scenarios):
         raise AssertionError(
             f"scenario index {scenario_index} out of range; feature has "
             f"{len(feature.scenarios)} scenarios"

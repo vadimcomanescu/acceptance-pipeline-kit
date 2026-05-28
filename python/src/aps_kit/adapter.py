@@ -15,12 +15,14 @@ from typing import Any
 
 
 def _classify(returncode: int) -> str:
+    # Spec contract: exit 0 = test_success, exit 1 = test_failure, anything
+    # else (including timeout) = infrastructure_error. Per-runner exit-code
+    # quirks (pytest's 2/3/4/5, vitest's 1-for-anything) collapse into
+    # infrastructure_error so the mutator can't mis-classify them as killed.
     if returncode == 0:
         return "test_success"
-    if returncode == 1 or returncode == 2 or returncode == 3 or returncode == 4 or returncode == 5:
-        # pytest exit codes: 1 (tests failed), 2 (interrupted), 3 (internal), 4 (usage), 5 (no tests).
-        # Treat 1 as test_failure and the rest as infrastructure_error.
-        return "test_failure" if returncode == 1 else "infrastructure_error"
+    if returncode == 1:
+        return "test_failure"
     return "infrastructure_error"
 
 

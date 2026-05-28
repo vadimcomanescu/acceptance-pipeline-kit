@@ -44,6 +44,13 @@ fn run_step(
     example: &Example,
     registry: &Registry,
 ) -> Result<(), StepError> {
+    // Resolve the handler (via invoke's lookup) only after checking the
+    // registry has it. We use the registry's `has` check + then invoke,
+    // because invoke also runs the handler; this gives us the
+    // "unsupported step first" ordering the other three language runtimes use.
+    if !registry.has(&step.text) {
+        return Err(StepError::Unsupported(step.text.clone()));
+    }
     for param in &step.parameters {
         if !example.contains_key(param) {
             return Err(StepError::MissingParameter {
@@ -64,6 +71,8 @@ pub fn run_execution<P: AsRef<Path>>(
     registry: Option<&Registry>,
 ) -> Result<(), StepError> {
     let feature = load_ir(&ir_path).map_err(StepError::Failure)?;
+    // scenario_index is usize so it cannot go negative; >= len is the only
+    // out-of-range case to guard against.
     let scenario = feature
         .scenarios
         .get(scenario_index)

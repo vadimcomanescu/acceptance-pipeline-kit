@@ -36,14 +36,17 @@ func exampleFor(s Scenario, exampleIndex int) (Example, error) {
 }
 
 func runStep(step Step, world World, example Example, reg *Registry) error {
+	// Resolve the handler first so an unsupported step gives the most useful
+	// error before we check anything else; then validate required example
+	// values; then invoke. Same order in all four language runtimes.
+	fn, err := reg.Resolve(step.Text)
+	if err != nil {
+		return err
+	}
 	for _, p := range step.Parameters {
 		if _, ok := example[p]; !ok {
 			return fmt.Errorf("step %q references missing example value %q", step.Text, p)
 		}
-	}
-	fn, err := reg.Resolve(step.Text)
-	if err != nil {
-		return err
 	}
 	return fn(world, example)
 }

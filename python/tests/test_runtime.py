@@ -3,8 +3,9 @@ from pathlib import Path
 
 import pytest
 
+from aps_kit.ir import Feature, Scenario, Step
 from aps_kit.registry import Registry, UnsupportedStepError
-from aps_kit.runtime import run_execution
+from aps_kit.runtime import executions_for, run_execution
 
 
 def _write_ir(tmp_path: Path) -> Path:
@@ -29,49 +30,79 @@ def _write_ir(tmp_path: Path) -> Path:
 
 def test_runs_scenario_with_background(tmp_path: Path) -> None:
     reg = Registry()
-
-    @reg.step("a fresh calculator")
-    def _(world, _ex):
-        world["total"] = 0
-
-    @reg.step("I add <a> and <b>")
-    def _(world, ex):
-        world["total"] = int(ex["a"]) + int(ex["b"])
-
-    @reg.step("the result is <sum>")
-    def _(world, ex):
-        assert world["total"] == int(ex["sum"])
-
-    ir = _write_ir(tmp_path)
-    run_execution(ir, 0, 0, registry=reg)
+    reg.step("a fresh calculator")(lambda world, _ex: world.update({"total": 0}))
+    reg.step("I add <a> and <b>")(
+        lambda world, ex: world.update({"total": int(ex["a"]) + int(ex["b"])})
+    )
+    reg.step("the result is <sum>")(
+        lambda world, ex: (_ for _ in ()).throw(
+            AssertionError(f"expected {ex['sum']} got {world['total']}")
+        )
+        if world["total"] != int(ex["sum"])
+        else None
+    )
+    run_execution(_write_ir(tmp_path), 0, 0, registry=reg)
 
 
 def test_unsupported_step_fails(tmp_path: Path) -> None:
     reg = Registry()
-    ir = _write_ir(tmp_path)
     with pytest.raises(UnsupportedStepError):
-        run_execution(ir, 0, 0, registry=reg)
+        run_execution(_write_ir(tmp_path), 0, 0, registry=reg)
 
 
 def test_missing_parameter_fails(tmp_path: Path) -> None:
     reg = Registry()
+    reg.step("a fresh calculator")(lambda world, _ex: None)
+    reg.step("I add <a> and <b>")(lambda world, ex: None)
+    reg.step("the result is <sum>")(lambda world, ex: None)
 
-    @reg.step("a fresh calculator")
-    def _(world, _ex):
-        world["total"] = 0
-
-    @reg.step("I add <a> and <b>")
-    def _(world, ex):
-        world["total"] = int(ex["a"]) + int(ex["b"])
-
-    @reg.step("the result is <sum>")
-    def _(world, ex):
-        assert world["total"] == int(ex["sum"])
-
-    # Strip a required key.
     ir = json.loads(_write_ir(tmp_path).read_text())
     ir["scenarios"][0]["examples"][0].pop("sum")
     bad = tmp_path / "bad.json"
     bad.write_text(json.dumps(ir), encoding="utf-8")
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match="missing example values"):
         run_execution(bad, 0, 0, registry=reg)
+
+
+def test_scenario_index_out_of_range(tmp_path: Path) -> None:
+    reg = Registry()
+    reg.step("a fresh calculator")(lambda world, _ex: None)
+    with pytest.raises(AssertionError, match="out of range"):
+        run_execution(_write_ir(tmp_path), 99, 0, registry=reg)
+
+
+def test_negative_scenario_index_rejected(tmp_path: Path) -> None:
+    reg = Registry()
+    reg.step("a fresh calculator")(lambda world, _ex: None)
+    with pytest.raises(AssertionError, match="out of range"):
+        run_execution(_write_ir(tmp_path), -1, 0, registry=reg)
+
+
+def test_scenario_without_examples_runs_once() -> None:
+    feature = Feature(
+        name="F",
+        background=(),
+        scenarios=(
+            Scenario(
+                name="no examples",
+                steps=(Step(keyword="Then", text="ok"),),
+                examples=(),
+            ),
+        ),
+    )
+    assert list(executions_for(feature)) == [(0, 0)]
+
+
+def test_example_index_out_of_range_for_scenario_without_examples(tmp_path: Path) -> None:
+    ir = {
+        "name": "F",
+        "scenarios": [
+            {"name": "s", "steps": [{"keyword": "Then", "text": "ok"}], "examples": []}
+        ],
+    }
+    p = tmp_path / "ir.json"
+    p.write_text(json.dumps(ir), encoding="utf-8")
+    reg = Registry()
+    reg.step("ok")(lambda _w, _ex: None)
+    with pytest.raises(IndexError, match="only example_index=0 is valid"):
+        run_execution(p, 0, 1, registry=reg)

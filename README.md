@@ -3,13 +3,43 @@
 Per-language scaffolding for the [Acceptance Pipeline Specification][aps] (APS),
 ready to drop into a Python, TypeScript, Go, or Rust project.
 
-APS supplies two portable Go binaries — `gherkin-parser` and `gherkin-mutator`
-— plus a written spec for the components that must be written per project.
-This kit ships those per-project components (entrypoint generator, runtime,
-step-handler base, runner adapter, convenience scripts) for four languages so
-you don't have to rewrite the same plumbing every time.
+## Who supplies what
+
+The pipeline has three layers, each owned by a different place:
+
+| Layer | What it is | Where it comes from |
+| --- | --- | --- |
+| Spec + Go binaries | The APS spec, plus `gherkin-parser` and `gherkin-mutator` | [upstream APS][aps] |
+| Per-language scaffolding | Entrypoint generator, runtime, step-handler registry, runner adapter, convenience scripts | **this kit** |
+| Feature files + step handlers | Your `.feature` files and the handlers that wire step text to your code | **your project** |
+
+APS deliberately leaves the middle layer to each project (its README splits
+"portable tools in this repository" from "project-specific components created
+by agents"). This kit implements that middle layer once for four languages so
+you don't rewrite the same plumbing every time.
+
+"Acceptance mutation" here means what the spec says it means — quoting
+[`specs/APS-README.md`](specs/APS-README.md):
+
+> Acceptance mutation means mutating Gherkin example values in the
+> specification-derived JSON IR. It does not mean conventional mutation testing
+> of application source code.
 
 [aps]: https://github.com/unclebob/Acceptance-Pipeline-Specification
+
+## Contents
+
+- [Who supplies what](#who-supplies-what)
+- [How the pipeline works](#how-the-pipeline-works)
+- [Reading the spec](#reading-the-spec)
+- [Quick start](#quick-start-in-your-own-project)
+- [Per-language setup](#per-language-setup)
+- [Repository layout](#repository-layout)
+- [Critical rules for writing step handlers](#critical-rules-for-writing-step-handlers)
+- [Troubleshooting](#troubleshooting)
+- [Multiple features and handler files](#multiple-features-and-handler-files)
+- [Conformance to the APS spec](#conformance-to-the-aps-spec)
+- [License](#license)
 
 ## How the pipeline works
 
@@ -45,6 +75,16 @@ The five per-project pieces in this kit are exactly what APS describes:
 | Step handler base | A `Registry` you register handlers against by exact step text. |
 | Runner adapter | A persistent process the mutator pipes mutated IRs into via stdin/stdout. |
 | Convenience scripts | `acceptance.sh` and `acceptance-mutation.sh` per language. |
+
+## Reading the spec
+
+The spec docs are vendored under [`specs/`](specs/) and are authoritative. Read
+them in this order:
+
+1. [`specs/APS-README.md`](specs/APS-README.md) — pipeline shape and component map.
+2. [`specs/parser-spec.md`](specs/parser-spec.md) — the JSON IR this kit consumes.
+3. [`specs/acceptance-generator.md`](specs/acceptance-generator.md) — generator command, runtime contract, step-handler contract, metadata, hashing.
+4. [`specs/mutator-spec.md`](specs/mutator-spec.md) — mutator behavior and the runner-adapter protocol.
 
 ## Quick start (in your own project)
 
@@ -104,59 +144,22 @@ for the language-specific commands.
 ## Per-language setup
 
 Each language ships a fully working calculator example under
-`<lang>/examples/calculator/`. Run that first to confirm the pipeline works on
-your machine; then port the pattern into your real project.
+`<lang>/examples/calculator/`. Install the kit for your language (per its full
+guide), run that calculator example to confirm the pipeline works on your
+machine, then port the pattern into your real project.
 
-### Python
+The per-language READMEs are the authoritative setup instructions — they carry
+the exact install, handler, and wiring details, and they stay in sync with the
+code. Each one covers: installing the kit for that language, writing handlers
+with the idiomatic registration mechanism, wiring those handlers to load before
+the generated tests, and running both the normal and mutation pipelines.
 
-```
-pip install ./python
-cd your-project
-mkdir -p features handlers
-# write features/*.feature and handlers/*.py
-# in conftest.py: import your handlers module so it registers on import
-~/.../acceptance-pipeline-kit/python/scripts/acceptance.sh
-```
-
-Full guide: [python/README.md](python/README.md).
-
-### TypeScript
-
-```
-cd typescript && npm install && npm run build
-cd your-project
-npm install @aps-kit/typescript --save-dev   # or file: path until published
-# write features/*.feature and handlers/*.ts
-# in vitest.config.ts, list your handlers file in setupFiles
-~/.../acceptance-pipeline-kit/typescript/scripts/acceptance.sh
-```
-
-Full guide: [typescript/README.md](typescript/README.md).
-
-### Go
-
-```
-cd go && go install ./cmd/acceptance-entrypoint-generator ./cmd/aps-adapter
-cd your-project
-# write features/*.feature
-# write handlers/*.go that register handlers from func init()
-# write acceptance/generated/handlers_init_test.go (one-line blank import)
-~/.../acceptance-pipeline-kit/go/scripts/acceptance.sh
-```
-
-Full guide: [go/README.md](go/README.md).
-
-### Rust
-
-```
-cd rust && cargo install --path aps-kit
-cd your-project
-# write features/*.feature
-# write src/lib.rs with pub fn register() that wires handlers
-HANDLERS_CRATE=your_crate_name ~/.../acceptance-pipeline-kit/rust/scripts/acceptance.sh
-```
-
-Full guide: [rust/README.md](rust/README.md).
+| Language | Run the calculator demo (after installing the kit — see guide) | Full guide |
+| --- | --- | --- |
+| Python | `cd python/examples/calculator && ../../scripts/acceptance.sh` | [python/README.md](python/README.md) |
+| TypeScript | `cd typescript/examples/calculator && npm install && ../../scripts/acceptance.sh` | [typescript/README.md](typescript/README.md) |
+| Go | `cd go/examples/calculator && ../../scripts/acceptance.sh` | [go/README.md](go/README.md) |
+| Rust | `cd rust/examples/calculator && HANDLERS_CRATE=calculator ../../scripts/acceptance.sh` | [rust/README.md](rust/README.md) |
 
 ## Repository layout
 
@@ -248,10 +251,11 @@ module isn't being imported before the generated tests run. Re-check:
 
 Drop additional `.feature` files into `features/`; the scripts process every
 file in the directory and generate one test module per feature. Handler
-files can also be split across the `handlers/` directory — as long as each
-file is imported before tests run (per the wiring above), every
-`@registry.step(...)` decorator anywhere in the project populates the
-shared `default_registry`.
+registrations can also be split across multiple files — as long as each file
+is loaded before tests run (per the wiring for your language above), every
+registration anywhere in the project populates the one shared registry
+(`default_registry` in Python/TypeScript, `apskit.DefaultRegistry` in Go,
+`aps_kit::default_registry()` in Rust).
 
 ## Conformance to the APS spec
 
@@ -282,7 +286,11 @@ The kit is built strictly against the three spec docs vendored at
   `infrastructure_error`.
 
 Empirical proof: `gherkin-mutator`, installed unmodified from upstream, kills
-15/15 mutations against both the Python and Go calculator examples.
+15/15 mutations (9 in `addition`, 6 in `subtraction`) against the calculator
+example in **all four languages** — Python, TypeScript, Go, and Rust. Each
+example commits the resulting `acceptance-mutation-manifest` back into its
+feature file. Re-verify any language yourself with
+`<lang>/scripts/acceptance-mutation.sh` after `scripts/install-aps-tools.sh`.
 
 ## License
 

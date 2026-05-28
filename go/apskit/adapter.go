@@ -161,3 +161,7 @@ func Serve(opts AdapterOptions) error {
 	}
 	return in.Err()
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:16:05+02:00","module_hash":"d916442158a0b8329ea98b95646e0892ae4920dcd21f0751c11e7d9a45231375","functions":[{"id":"func/parseTimeout","name":"parseTimeout","line":34,"end_line":58,"hash":"a1dee0aa7d70256f2871809f0c72ae3a3e2332a1c9bd066d8bccb127c6a49201"},{"id":"func/classifyExit","name":"classifyExit","line":60,"end_line":71,"hash":"e883318c180250f7c80709370d81a48200e7f95b170c68ba192b26f1fa82d9d9"},{"id":"func/runOne","name":"runOne","line":82,"end_line":126,"hash":"dfb01cde910c13d69431145107c91f86e5137ed8ba3b2c2acc09942e2c9d6762"},{"id":"func/appendError","name":"appendError","line":128,"end_line":133,"hash":"0e408434d6860c110146560623053b4b5d11ab9d6cf25b2975e05f0f447a6de2"},{"id":"func/Serve","name":"Serve","line":137,"end_line":163,"hash":"4d273fcb51a1f715fd630d013f4b985d083cb582600b5484bf8147ebfc74e658"}]}
+// mutate4go-manifest-end

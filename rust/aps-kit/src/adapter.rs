@@ -45,13 +45,27 @@ pub fn parse_timeout(s: &str) -> Option<Duration> {
 }
 
 // Public so unit tests can pin classification semantics without subprocess setup.
+//
+// Spec contract: exit 0 = test_success, anything that *runs and fails* is
+// test_failure, anything that can't run is infrastructure_error.
+//
+// For Rust we have to handle two exit codes for "ran and failed":
+//   1   — the conventional Unix convention.
+//   101 — what `cargo test` actually returns. libtest's harness exits with
+//         101 on assertion failure and cargo propagates it verbatim. Without
+//         this branch the mutator misclassifies every killed mutation as
+//         an infrastructure_error.
+//
+// Compile errors from cargo also exit 101, so a broken build can look like
+// "all mutations killed" in the report. In practice the normal acceptance
+// run catches that case first (it fails to compile before mutation starts).
 pub fn classify(code: Option<i32>, killed: bool) -> &'static str {
     if killed {
         return "infrastructure_error";
     }
     match code {
         Some(0) => "test_success",
-        Some(1) => "test_failure",
+        Some(1) | Some(101) => "test_failure",
         _ => "infrastructure_error",
     }
 }

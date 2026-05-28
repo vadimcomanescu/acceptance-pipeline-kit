@@ -58,3 +58,7 @@ func (r *Registry) Has(text string) bool {
 // caller does not pass one explicitly. Project handler packages register
 // against it from init().
 var DefaultRegistry = NewRegistry()
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:13:38+02:00","module_hash":"47ef8ad038b16ababa43ca74f128b9e520e3fa0d9ef25fa91a8353fcc7315466","functions":[{"id":"func/UnsupportedStepError.Error","name":"UnsupportedStepError.Error","line":19,"end_line":21,"hash":"f7652031d47c44a7d02389c629b326bb1ec606c2516829a61a3c597d35d4da67"},{"id":"func/NewRegistry","name":"NewRegistry","line":30,"end_line":32,"hash":"84a5b251fad03977a3c010615c28c5f93f97f2c699139dd74ab422dc8c67c181"},{"id":"func/Registry.Step","name":"Registry.Step","line":36,"end_line":41,"hash":"044e46280cc32170c1637180b4a26bddb1703b178ebc182a6c976554ad792c32"},{"id":"func/Registry.Resolve","name":"Registry.Resolve","line":44,"end_line":49,"hash":"fde9704f5c0d3a10d96fedd058d0b93d79e849d92717c6d254a48637e4d35597"},{"id":"func/Registry.Has","name":"Registry.Has","line":52,"end_line":55,"hash":"c78b0e853e3bc9f45ce9f7dd5627f11307485d195b37477298f79f40b15c30f3"}]}
+// mutate4go-manifest-end

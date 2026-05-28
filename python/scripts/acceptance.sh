@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Normal acceptance pipeline:
 #   1. gherkin-parser turns each .feature into JSON IR
-#   2. aps-generate writes pytest entry points + metadata
+#   2. acceptance-entrypoint-generator writes pytest entry points + metadata
 #   3. pytest runs the generated tests
 #
 # Run from a project root that has:

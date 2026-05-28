@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Iterator
+from typing import Any, Iterator
 
 from .ir import Feature, Scenario, Step, load_ir
 from .registry import Registry, default_registry
@@ -33,7 +33,7 @@ def _example_for(scenario: Scenario, example_index: int) -> dict[str, str]:
     return dict(scenario.examples[example_index])
 
 
-def _run_step(step: Step, world: dict, example: dict[str, str], registry: Registry) -> None:
+def _run_step(step: Step, world: dict[str, Any], example: dict[str, str], registry: Registry) -> None:
     # Resolve the handler first so an unsupported step gives the most useful
     # error before we check anything else; then validate required example
     # values; then invoke. Same order in all four language runtimes.
@@ -66,7 +66,7 @@ def run_execution(
     scenario = feature.scenarios[scenario_index]
     example = _example_for(scenario, example_index)
     reg = registry or default_registry
-    world: dict = {}
+    world: dict[str, Any] = {}
     for step in feature.background:
         _run_step(step, world, example, reg)
     for step in scenario.steps:

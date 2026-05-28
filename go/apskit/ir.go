@@ -46,3 +46,7 @@ func LoadIR(path string) (*Feature, error) {
 	}
 	return &f, nil
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:13:37+02:00","module_hash":"fa3d8b47d0605db82e21ea4bd23f1d912b762e96970c5bc5f37f7f5072e46eab","functions":[{"id":"func/LoadIR","name":"LoadIR","line":35,"end_line":48,"hash":"bf0fcbe282bb2e8c850cc155ef9dfae1252305e03d974837d3ff560181271ef5"}]}
+// mutate4go-manifest-end

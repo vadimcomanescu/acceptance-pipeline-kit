@@ -142,6 +142,17 @@ func TestServeClassifiesFailureExit(t *testing.T) {
 	}
 }
 
+func TestAppendErrorBothBranches(t *testing.T) {
+	// Regression (mutate4go): both branches of appendError need a test or a
+	// flipped condition (== "" vs != "") survives unchanged.
+	if got := appendError("", "msg"); got != "msg" {
+		t.Errorf("empty existing: got %q, want %q", got, "msg")
+	}
+	if got := appendError("prefix", "msg"); got != "prefix\nmsg" {
+		t.Errorf("non-empty existing: got %q, want %q", got, "prefix\nmsg")
+	}
+}
+
 func TestServeClassifiesTimeout(t *testing.T) {
 	in := strings.NewReader(`{"id":"x","feature_json":"/x","timeout":"100ms"}` + "\n")
 	stdout := &bytes.Buffer{}
@@ -155,6 +166,12 @@ func TestServeClassifiesTimeout(t *testing.T) {
 	_ = json.Unmarshal(bytes.TrimSpace(stdout.Bytes()), &resp)
 	if resp.Outcome != "infrastructure_error" {
 		t.Errorf("expected infrastructure_error for timeout, got %s", resp.Outcome)
+	}
+	// Regression (mutate4go): the killed flag set on DeadlineExceeded is what
+	// triggers the "process killed or timed out" diagnostic appended to the
+	// error. Without the flag the diagnostic gets dropped.
+	if !strings.Contains(resp.Error, "process killed or timed out") {
+		t.Errorf("expected timeout diagnostic in error, got %q", resp.Error)
 	}
 }
 

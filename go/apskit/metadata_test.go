@@ -1,6 +1,8 @@
 package apskit
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -53,6 +55,63 @@ func TestImplementationHashIsDeterministicAndPathSensitive(t *testing.T) {
 func TestImplementationHashMissingFile(t *testing.T) {
 	if _, err := ImplementationHash([]string{filepath.Join(t.TempDir(), "missing")}); err == nil {
 		t.Fatal("expected error for missing file")
+	}
+}
+
+func TestImplementationHashSeparatesPathFromContent(t *testing.T) {
+	// Regression (mutate4go): without the null separators between path and
+	// content, ("a", "b") would hash the same as ("ab", ""). The separator
+	// is what makes the hash unambiguous, so both `Write([]byte{0})` calls
+	// matter and must be exercised.
+	dir := t.TempDir()
+	a := filepath.Join(dir, "a")
+	ab := filepath.Join(dir, "ab")
+	_ = os.WriteFile(a, []byte("b"), 0o644)
+	_ = os.WriteFile(ab, []byte(""), 0o644)
+	h1, err := ImplementationHash([]string{a})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h2, err := ImplementationHash([]string{ab})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if h1 == h2 {
+		t.Errorf("hash collided across (path,content) boundary; expected different hashes, got %q", h1)
+	}
+}
+
+func TestImplementationHashByteExactAlgorithm(t *testing.T) {
+	// Regression (mutate4go): the separator bytes survived because every
+	// other test compared the hash against itself rather than against an
+	// independent computation. Pin the documented algorithm here: for each
+	// sorted file path, write <path-utf8> <0x00> <content> <0x00> into a
+	// running SHA-256. Any deviation - separator byte, order, omission -
+	// fails this test.
+	dir := t.TempDir()
+	file := filepath.Join(dir, "x")
+	_ = os.WriteFile(file, []byte("content"), 0o644)
+	got, err := ImplementationHash([]string{file})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h := sha256.New()
+	h.Write([]byte(file))
+	h.Write([]byte{0})
+	h.Write([]byte("content"))
+	h.Write([]byte{0})
+	want := "sha256:" + hex.EncodeToString(h.Sum(nil))
+	if got != want {
+		t.Errorf("hash algorithm changed: got %q want %q", got, want)
+	}
+}
+
+func TestSchemaVersionLiteralValue(t *testing.T) {
+	// Regression (mutate4go): every other test asserts against the constant
+	// itself, so a mutation flipping SchemaVersion to 0 would have gone
+	// undetected.
+	if SchemaVersion != 1 {
+		t.Errorf("SchemaVersion should be 1, got %d", SchemaVersion)
 	}
 }
 

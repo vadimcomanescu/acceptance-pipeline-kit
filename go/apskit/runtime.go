@@ -82,3 +82,7 @@ func RunExecution(irPath string, scenarioIndex, exampleIndex int, reg *Registry)
 	}
 	return nil
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:13:19+02:00","module_hash":"30b27784c1ee5bb2979587fe5a44230e84c8a9027599e82eae31b6b9deee65ff","functions":[{"id":"func/ExecutionsFor","name":"ExecutionsFor","line":7,"end_line":19,"hash":"178caac53ad5bdd9ed1fdaf04902d851c9824a10199a8af4d5918886bb9344b5"},{"id":"func/exampleFor","name":"exampleFor","line":21,"end_line":36,"hash":"1c867c8a7c0c4c8018ce375651be5af66398143f02ff3efe8c8f3b83e2f08a90"},{"id":"func/runStep","name":"runStep","line":38,"end_line":52,"hash":"02dbe1548f4a4b3b8b342e41bfa93ae57149160d3e9d225bc39403c51110ba73"},{"id":"func/RunExecution","name":"RunExecution","line":56,"end_line":84,"hash":"fe85fac20cffa7cc12e50b44a731e22af2e7d50ce129e6506ee926600042aba4"}]}
+// mutate4go-manifest-end

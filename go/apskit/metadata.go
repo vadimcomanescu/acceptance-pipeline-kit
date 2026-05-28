@@ -82,3 +82,7 @@ func WriteMetadata(in MetadataInput) (string, error) {
 	}
 	return out, nil
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:17:13+02:00","module_hash":"4be76cfee94ec2cadf7eeb67b3a8f2ba9cef3ecd11bccca4cf072dbacf62d5fd","functions":[{"id":"func/MetadataFilename","name":"MetadataFilename","line":23,"end_line":28,"hash":"f223831690a478b4f4e0788c62ff4b05487703051cb0fad355194cbf1a89f40e"},{"id":"func/ImplementationHash","name":"ImplementationHash","line":31,"end_line":46,"hash":"dc743dec448ae406522048008ebf7fdfcd3970f8c900a0641a99602c2279e29a"},{"id":"func/WriteMetadata","name":"WriteMetadata","line":58,"end_line":84,"hash":"badb21e61075952a19d78441a87768310f4c36df8aafd27327991ea96b63401d"}]}
+// mutate4go-manifest-end

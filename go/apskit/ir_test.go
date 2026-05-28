@@ -14,24 +14,22 @@ func TestLoadIRMissingFile(t *testing.T) {
 	}
 }
 
-func TestLoadIRInvalidJSON(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "bad.json")
-	if err := os.WriteFile(path, []byte("not json"), 0o644); err != nil {
+func assertLoadIRError(t *testing.T, contents []byte, want string) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "ir.json")
+	if err := os.WriteFile(path, contents, 0o644); err != nil {
 		t.Fatal(err)
 	}
 	_, err := LoadIR(path)
-	if err == nil || !strings.Contains(err.Error(), "decode IR") {
-		t.Fatalf("expected decode error, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), want) {
+		t.Fatalf("expected %q, got %v", want, err)
 	}
 }
 
+func TestLoadIRInvalidJSON(t *testing.T) {
+	assertLoadIRError(t, []byte("not json"), "decode IR")
+}
+
 func TestLoadIRRejectsMissingName(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "noname.json")
-	if err := os.WriteFile(path, []byte(`{"scenarios":[]}`), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	_, err := LoadIR(path)
-	if err == nil || !strings.Contains(err.Error(), "missing 'name'") {
-		t.Fatalf("expected missing name error, got %v", err)
-	}
+	assertLoadIRError(t, []byte(`{"scenarios":[]}`), "missing 'name'")
 }

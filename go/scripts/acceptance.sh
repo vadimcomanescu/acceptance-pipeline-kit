@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Normal acceptance pipeline for a Go project:
 #   1. gherkin-parser turns each .feature into JSON IR
-#   2. aps-generate writes _test.go entry points + metadata
+#   2. acceptance-entrypoint-generator writes _test.go entry points + metadata
 #   3. go test runs the generated tests
 #
 # Expected project layout:

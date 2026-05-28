@@ -48,6 +48,10 @@ fn parse_timeout_units() {
 fn classify_covers_every_branch() {
     assert_eq!(classify(Some(0), false), "test_success");
     assert_eq!(classify(Some(1), false), "test_failure");
+    // Regression: cargo test propagates libtest's exit code (101) on
+    // assertion failure. Without recognising 101 the mutator misclassified
+    // every killed mutation as an infrastructure_error.
+    assert_eq!(classify(Some(101), false), "test_failure");
     assert_eq!(classify(Some(42), false), "infrastructure_error");
     assert_eq!(classify(None, false), "infrastructure_error");
     assert_eq!(classify(Some(0), true), "infrastructure_error");

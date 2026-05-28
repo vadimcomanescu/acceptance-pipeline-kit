@@ -99,6 +99,13 @@ func TestRunExecutionScenarioIndexOutOfRange(t *testing.T) {
 	if err := RunExecution(writeIR(t), -1, 0, reg); err == nil {
 		t.Fatal("expected negative-index error")
 	}
+	// Boundary: the IR has 1 scenario, so valid indices are [0]. Index 1
+	// (== len) must be rejected. mutate4go found that >= -> > let this case
+	// slip through and crash with an out-of-bounds slice access.
+	if err := RunExecution(writeIR(t), 1, 0, reg); err == nil ||
+		!strings.Contains(err.Error(), "out of range") {
+		t.Fatalf("expected boundary out-of-range error, got %v", err)
+	}
 }
 
 func TestRunExecutionMissingParameter(t *testing.T) {
@@ -145,6 +152,12 @@ func TestExampleForOutOfRange(t *testing.T) {
 	scenario := Scenario{Name: "s", Examples: []map[string]string{{"a": "1"}}}
 	if _, err := exampleFor(scenario, 5); err == nil {
 		t.Fatal("expected out-of-range error")
+	}
+	// Boundary: scenario has 1 example, valid indices are [0]. Index 1
+	// (== len) must be rejected. mutate4go found that >= -> > let this case
+	// slip through and crash.
+	if _, err := exampleFor(scenario, 1); err == nil {
+		t.Fatal("expected out-of-range error at boundary index == len")
 	}
 	noEx := Scenario{Name: "n"}
 	if _, err := exampleFor(noEx, 1); err == nil {

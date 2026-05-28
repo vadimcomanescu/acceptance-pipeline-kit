@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Acceptance mutation pipeline:
 #   1. gherkin-parser produces a base IR (handled internally by gherkin-mutator)
-#   2. aps-generate writes generated tests + metadata into the mutator's
+#   2. acceptance-entrypoint-generator writes generated tests + metadata into the mutator's
 #      generated-dir
 #   3. gherkin-mutator drives aps-adapter as a persistent worker.
 set -euo pipefail

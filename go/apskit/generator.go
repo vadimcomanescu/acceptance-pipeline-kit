@@ -88,3 +88,7 @@ func Generate(opts GenerateOptions) ([]string, error) {
 	}
 	return generated, nil
 }
+
+// mutate4go-manifest-begin
+// {"version":1,"tested_at":"2026-05-28T18:17:14+02:00","module_hash":"73837e8cfc8da6c745491c32091f33d8a53144926249d6a13fd2d8cd46d7b6ae","functions":[{"id":"func/SafeIdentifier","name":"SafeIdentifier","line":14,"end_line":21,"hash":"5aa7e33693affedcaf1b890dbe43426f048cf23e1d5160fb15fb1d7a942cd48b"},{"id":"func/Generate","name":"Generate","line":33,"end_line":90,"hash":"82d310f84b6140a48faaf9ec8eaed25b128450d77e99db4fc6162d88b162768d"}]}
+// mutate4go-manifest-end

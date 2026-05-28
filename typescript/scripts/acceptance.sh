@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Normal acceptance pipeline for a TypeScript project:
 #   1. gherkin-parser turns each .feature into JSON IR
-#   2. aps-generate writes vitest entry points + metadata
+#   2. acceptance-entrypoint-generator writes vitest entry points + metadata
 #   3. vitest runs the generated tests
 #
 # Expected project layout:

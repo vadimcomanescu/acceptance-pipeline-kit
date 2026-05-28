@@ -1,42 +1,45 @@
-"""acceptance-entrypoint-generator CLI."""
+"""acceptance-entrypoint-generator CLI.
+
+Per the APS acceptance-generator spec, the command is invoked as:
+
+    acceptance-entrypoint-generator <json-ir> <generated-test-output>
+
+Two positional arguments, nothing else. Language-specific configuration is
+read from environment variables:
+
+    APS_FEATURE_PATH   feature path to record in metadata (default: <json-ir>)
+"""
 from __future__ import annotations
 
-import argparse
+import os
 import sys
 from pathlib import Path
 
 from .generator import generate
 
 
+_USAGE = (
+    "usage: acceptance-entrypoint-generator <json-ir> <generated-test-output>"
+)
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        prog="aps-generate",
-        description="Generate pytest entry points from APS JSON IR.",
-    )
-    parser.add_argument("ir", help="Path to the JSON IR produced by gherkin-parser.")
-    parser.add_argument(
-        "output_dir",
-        help="Directory where generated test files and metadata/ are written.",
-    )
-    parser.add_argument(
-        "--feature-path",
-        help=(
-            "Original .feature path to record in metadata. Defaults to the IR path. "
-            "Use this when the feature lives under a different name than the IR."
-        ),
-    )
-    args = parser.parse_args(argv)
+    args = list(sys.argv[1:] if argv is None else argv)
+    if args and args[0] in {"-h", "--help"}:
+        sys.stderr.write(_USAGE + "\n")
+        return 0
+    if len(args) != 2:
+        sys.stderr.write(_USAGE + "\n")
+        return 2
+    ir_path, output_dir = args
+    feature_path = os.environ.get("APS_FEATURE_PATH") or None
     try:
-        generate(
-            Path(args.ir),
-            Path(args.output_dir),
-            feature_path=args.feature_path,
-        )
+        generate(Path(ir_path), Path(output_dir), feature_path=feature_path)
     except FileNotFoundError as exc:
-        print(f"aps-generate: {exc}", file=sys.stderr)
+        sys.stderr.write(f"acceptance-entrypoint-generator: {exc}\n")
         return 1
-    except ValueError as exc:
-        print(f"aps-generate: {exc}", file=sys.stderr)
+    except (ValueError, OSError) as exc:
+        sys.stderr.write(f"acceptance-entrypoint-generator: {exc}\n")
         return 1
     return 0
 

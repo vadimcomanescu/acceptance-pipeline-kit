@@ -10,7 +10,7 @@
     ".": "./dist/src/index.js"
   },
   "bin": {
-    "aps-generate": "dist/cmd/aps-generate.js",
+    "acceptance-entrypoint-generator": "dist/cmd/acceptance-entrypoint-generator.js",
     "aps-adapter": "dist/cmd/aps-adapter.js"
   },
   "files": [

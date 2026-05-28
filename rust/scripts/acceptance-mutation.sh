@@ -16,7 +16,8 @@ fi
 mkdir -p "$WORK_DIR" "$GENERATED_DIR"
 BASE_IR="${WORK_DIR}/base.json"
 gherkin-parser "$FEATURE" "$BASE_IR"
-aps-generate --feature-path "$FEATURE" --handlers-crate "$HANDLERS_CRATE" "$BASE_IR" "$GENERATED_DIR"
+APS_FEATURE_PATH="$FEATURE" APS_HANDLERS_CRATE="$HANDLERS_CRATE" \
+  acceptance-entrypoint-generator "$BASE_IR" "$GENERATED_DIR"
 
 exec gherkin-mutator \
   --feature "$FEATURE" \

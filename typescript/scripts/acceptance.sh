@@ -35,7 +35,7 @@ for feature in "${features[@]}"; do
   echo "parsing $feature -> $ir"
   gherkin-parser "$feature" "$ir"
   echo "generating tests from $ir into $GENERATED_DIR"
-  npx aps-generate "$ir" "$GENERATED_DIR" --feature-path "$feature"
+  APS_FEATURE_PATH="$feature" npx acceptance-entrypoint-generator "$ir" "$GENERATED_DIR"
 done
 
 echo "running vitest"

@@ -22,7 +22,7 @@ fi
 mkdir -p "$WORK_DIR" "$GENERATED_DIR"
 BASE_IR="${WORK_DIR}/base.json"
 gherkin-parser "$FEATURE" "$BASE_IR"
-aps-generate "$BASE_IR" "$GENERATED_DIR" --feature-path "$FEATURE"
+APS_FEATURE_PATH="$FEATURE" acceptance-entrypoint-generator "$BASE_IR" "$GENERATED_DIR"
 
 exec gherkin-mutator \
   --feature "$FEATURE" \

@@ -31,14 +31,15 @@ fi
 
 for feature in "${features[@]}"; do
   stem="$(basename "$feature" .feature)"
-  ir="$(realpath -m "$IR_DIR/${stem}.json")"
+  # IR path stays relative; cargo runs integration tests with cwd = crate root.
+  # The feature path stays relative so the metadata filename matches spec
+  # examples (features-calculator-feature.json).
+  ir="$IR_DIR/${stem}.json"
   echo "parsing $feature -> $ir"
   gherkin-parser "$feature" "$ir"
   echo "generating tests from $ir into $GENERATED_DIR (handlers crate: $HANDLERS_CRATE)"
-  aps-generate \
-    --feature-path "$(realpath -m "$feature")" \
-    --handlers-crate "$HANDLERS_CRATE" \
-    "$ir" "$GENERATED_DIR"
+  APS_FEATURE_PATH="$feature" APS_HANDLERS_CRATE="$HANDLERS_CRATE" \
+    acceptance-entrypoint-generator "$ir" "$GENERATED_DIR"
 done
 
 echo "running cargo test"

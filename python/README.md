@@ -1,62 +1,168 @@
 # aps-kit (Python)
 
-Python scaffolding for the Acceptance Pipeline Specification.
+Python scaffolding for the [Acceptance Pipeline Specification][aps].
 
-## What this package provides
+[aps]: https://github.com/unclebob/Acceptance-Pipeline-Specification
 
-- `aps_kit.runtime.run_execution(ir_path, scenario_index, example_index, registry=None)`
-  — load IR, prepend background, run scenario steps through the registered
-  handlers. Designed to be called from generated pytest functions.
-- `aps_kit.registry.default_registry` — global `Registry`. Project handlers
-  register against it with `@default_registry.step("the result is <result>")`.
-- `aps-generate` CLI — reads JSON IR, writes a pytest module and
-  `metadata/<feature-metadata-name>.json` per the APS generator spec.
-- `aps-adapter` CLI — persistent NDJSON worker that gherkin-mutator launches
-  via `--runner-worker`. Each job swaps `APS_IR_PATH` for the worker's
-  generated tests so the same test code executes mutated IRs.
+## What you get
+
+- `aps_kit.run_execution(ir_path, scenario_index, example_index, registry=None)`
+  — the runtime called from generated pytest functions. Loads the IR, prepends
+  background steps, dispatches each step to the registered handler with a
+  fresh `world` dict.
+- `aps_kit.default_registry` — process-wide `Registry`. Project handlers
+  register against it with
+  `@default_registry.step("the result is <result>")`.
+- `acceptance-entrypoint-generator` (CLI) — APS-conformant: takes two
+  positional args (`<json-ir> <generated-test-output>`). Emits one pytest
+  function per (scenario, example) plus
+  `metadata/<feature-metadata-name>.json`.
+- `aps-adapter` (CLI) — persistent NDJSON worker that `gherkin-mutator`
+  launches via `--runner-worker`. Each job swaps `APS_IR_PATH` for the test
+  command so the same generated tests execute every mutated IR.
 
 ## Install
 
-```
+```bash
 cd python
 pip install -e .[test]
-~/Code/acceptance-pipeline-kit/scripts/install-aps-tools.sh   # gherkin-parser, gherkin-mutator
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh  # gherkin-parser, gherkin-mutator
 ```
 
-## End-to-end demo
+## Try the demo
 
-```
+```bash
 cd python/examples/calculator
 ../../scripts/acceptance.sh
 ```
 
-What you'll see: `gherkin-parser` writes `build/acceptance/calculator.json`,
-`aps-generate` writes `acceptance/generated/calculator_acceptance_test.py`,
-and pytest runs five test functions (three addition rows + two subtraction
-rows).
+Expected: five tests pass (three addition rows + two subtraction rows). The
+script runs `gherkin-parser → acceptance-entrypoint-generator → pytest`.
 
-## Project layout this expects
+## Adopt in your own project
+
+1. **Install the kit and APS binaries** (steps above; you only do this once
+   per machine).
+
+2. **Write a feature file** under `features/`.
+
+   ```gherkin
+   # features/orders.feature
+   Feature: Orders
+
+     Background:
+       Given an empty cart
+
+     Scenario Outline: add item
+       When I add <quantity> of <sku>
+       Then the cart total is <total>
+
+       Examples:
+         | sku   | quantity | total |
+         | WIDGET| 2        | 19.98 |
+   ```
+
+3. **Write handlers** that match each step text exactly.
+
+   ```python
+   # handlers/orders_handlers.py
+   from aps_kit import default_registry as registry
+
+   @registry.step("an empty cart")
+   def _(world, _ex):
+       world["cart"] = Cart()
+
+   @registry.step("I add <quantity> of <sku>")
+   def _(world, ex):
+       world["cart"].add(ex["sku"], int(ex["quantity"]))
+
+   @registry.step("the cart total is <total>")
+   def _(world, ex):
+       assert world["cart"].total() == Decimal(ex["total"])
+   ```
+
+4. **Wire pytest to import the handlers** before the generated tests run.
+
+   ```python
+   # conftest.py at project root
+   from handlers import orders_handlers  # noqa: F401
+   ```
+
+   Importing the module is enough — the `@registry.step(...)` decorators
+   populate `default_registry` at import time.
+
+5. **Run the pipeline.**
+
+   ```bash
+   /path/to/acceptance-pipeline-kit/python/scripts/acceptance.sh
+   ```
+
+6. **Optionally run mutation** to prove your assertions actually check the
+   example data.
+
+   ```bash
+   FEATURE=features/orders.feature \
+     /path/to/acceptance-pipeline-kit/python/scripts/acceptance-mutation.sh
+   ```
+
+## Expected project layout
 
 ```
-project-root/
-  features/*.feature         your Gherkin files
-  handlers/                  any package that registers handlers on import
-  conftest.py                imports the handlers module so pytest collects steps
-  acceptance/generated/      created by aps-generate (gitignored)
-  build/acceptance/          created by gherkin-parser (gitignored)
+your-project/
+  conftest.py               imports your handlers module
+  features/*.feature        your Gherkin files (one Feature per file)
+  handlers/*.py             register @default_registry.step(...) handlers
+  acceptance/generated/     created by the generator (gitignore this)
+  build/acceptance/         created by gherkin-parser (gitignore this)
 ```
+
+## Script options
+
+`acceptance.sh` reads these env vars:
+
+| Var | Default | Meaning |
+| --- | --- | --- |
+| `FEATURES_DIR` | `features` | directory containing `.feature` files |
+| `IR_DIR` | `build/acceptance` | where `gherkin-parser` writes JSON IR |
+| `GENERATED_DIR` | `acceptance/generated` | where generated pytest files land |
+
+`acceptance-mutation.sh` adds:
+
+| Var | Default | Meaning |
+| --- | --- | --- |
+| `FEATURE` | `features/calculator.feature` | the single feature file to mutate |
+| `WORK_DIR` | `build/acceptance-mutation` | mutator working directory |
+| `LEVEL` | `hard` | differential level: `full`, `hard`, or `soft` |
+
+Any extra arguments are passed straight through to `pytest` or
+`gherkin-mutator`.
+
+## Generator CLI shape
+
+Per APS, the generator takes exactly two positional arguments:
+
+```
+acceptance-entrypoint-generator <json-ir> <generated-test-output>
+```
+
+Environment variables:
+
+- `APS_FEATURE_PATH` — feature path recorded in metadata. Defaults to the IR
+  path; set it to the relative `features/foo.feature` so the metadata
+  filename matches the spec's lowercase-and-hyphen convention.
+
+Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 
 ## Conformance notes
 
-- The generator emits one function per (scenario, example), named
-  `test_scenario_<sIdx>_<scenario>_example_<eIdx>` (1-based example index).
-- Generated functions read the IR from `APS_IR_PATH` at run time; the default
-  is the IR path that was current when `aps-generate` ran. The adapter
-  overrides this env var per mutator job so the same generated module runs
-  every mutated IR.
+- The generator emits one `def test_scenario_<sIdx>_<scenario>_example_<eIdx>`
+  function per (scenario, example). One-based example index.
+- Generated tests read the IR from `APS_IR_PATH` at run time; the default is
+  the IR path that was current when the generator ran. The adapter overrides
+  this env var per mutator job.
 - `metadata/<feature-metadata-name>.json` follows the lowercase-and-hyphen
   filename mapping and records `implementation_hash` over the generated test
-  files only.
-- The adapter classifies pytest's exit code 0 as `test_success`, 1 as
+  file only.
+- The adapter classifies pytest exit code 0 as `test_success`, 1 as
   `test_failure`, every other exit code as `infrastructure_error`. Timeouts
   also become `infrastructure_error`.

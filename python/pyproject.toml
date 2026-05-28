@@ -16,7 +16,7 @@ dependencies = []
 test = ["pytest>=7"]
 
 [project.scripts]
-aps-generate = "aps_kit.generator_cli:main"
+acceptance-entrypoint-generator = "aps_kit.generator_cli:main"
 aps-adapter = "aps_kit.adapter_cli:main"
 
 [tool.setuptools.packages.find]

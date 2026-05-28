@@ -1,59 +1,155 @@
 # aps-kit (Go)
 
-Go scaffolding for the Acceptance Pipeline Specification.
+Go scaffolding for the [Acceptance Pipeline Specification][aps].
 
 Module path: `github.com/vadimcomanescu/acceptance-pipeline-kit/go`.
 
-## What this module provides
+[aps]: https://github.com/unclebob/Acceptance-Pipeline-Specification
 
-- `apskit.RunExecution(irPath, scenarioIndex, exampleIndex, reg)` — runtime
-  called from generated `_test.go` functions.
-- `apskit.DefaultRegistry` — process-wide registry. Project handler packages
-  register steps from `func init() { ... }`.
-- `aps-generate` (cmd) — reads JSON IR, writes a Go test file plus
-  `metadata/<feature-metadata-name>.json` per the APS generator spec.
-- `aps-adapter` (cmd) — persistent NDJSON worker spawned by gherkin-mutator.
+## What you get
+
+- `apskit.RunExecution(irPath, scenarioIndex, exampleIndex, registry)` — the
+  runtime called from generated `*_acceptance_test.go` functions. Loads the
+  IR, prepends background steps, dispatches each step to the registered
+  handler with a fresh `World` map.
+- `apskit.DefaultRegistry` — process-wide `*Registry`. Project handler
+  packages register against it from `func init()`.
+- `acceptance-entrypoint-generator` (binary) — APS-conformant: takes two
+  positional args (`<json-ir> <generated-test-output>`). Emits a Go test file
+  and `metadata/<feature-metadata-name>.json`.
+- `aps-adapter` (binary) — persistent NDJSON worker that `gherkin-mutator`
+  launches via `--runner-worker`.
 
 ## Install
 
-```
+```bash
 cd go
-go build ./...
-go install ./cmd/aps-generate ./cmd/aps-adapter
-~/Code/acceptance-pipeline-kit/scripts/install-aps-tools.sh
+go install ./cmd/acceptance-entrypoint-generator ./cmd/aps-adapter
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
+# ensure $(go env GOPATH)/bin is on PATH
 ```
 
-## End-to-end demo
+## Try the demo
 
-```
+```bash
 cd go/examples/calculator
 ../../scripts/acceptance.sh
 ```
 
-## Project layout this expects
+Expected: five tests pass.
+
+## Adopt in your own project
+
+1. **Install the kit and APS binaries** (steps above; once per machine).
+
+2. **Add aps-kit as a module dependency.**
+
+   ```bash
+   go get github.com/vadimcomanescu/acceptance-pipeline-kit/go/apskit
+   ```
+
+3. **Write a feature file** under `features/`.
+
+4. **Write handlers** in a package the generated tests can import, and
+   register them from `init()`.
+
+   ```go
+   // handlers/handlers.go
+   package handlers
+
+   import "github.com/vadimcomanescu/acceptance-pipeline-kit/go/apskit"
+
+   func init() {
+       r := apskit.DefaultRegistry
+       r.Step("an empty cart", func(world apskit.World, _ apskit.Example) error {
+           world["cart"] = NewCart()
+           return nil
+       })
+       r.Step("I add <quantity> of <sku>", func(world apskit.World, ex apskit.Example) error {
+           qty, _ := strconv.Atoi(ex["quantity"])
+           world["cart"].(*Cart).Add(ex["sku"], qty)
+           return nil
+       })
+       r.Step("the cart total is <total>", func(world apskit.World, ex apskit.Example) error {
+           if got := world["cart"].(*Cart).Total(); got.String() != ex["total"] {
+               return fmt.Errorf("expected %s, got %s", ex["total"], got)
+           }
+           return nil
+       })
+   }
+   ```
+
+5. **Add a one-line blank-import file** inside the generated tests directory
+   so its package wires up your handlers before any test runs.
+
+   ```go
+   // acceptance/generated/handlers_init_test.go (hand-written, not generated)
+   package generated
+
+   import _ "yourmodule/handlers"
+   ```
+
+   The generator never touches this file. The blank import triggers your
+   `init()` so `DefaultRegistry` is populated when the generated tests run.
+
+6. **Run the pipeline.**
+
+   ```bash
+   /path/to/acceptance-pipeline-kit/go/scripts/acceptance.sh
+   ```
+
+7. **Optionally run mutation:**
+
+   ```bash
+   FEATURE=features/orders.feature \
+     /path/to/acceptance-pipeline-kit/go/scripts/acceptance-mutation.sh
+   ```
+
+## Expected project layout
 
 ```
-project-root/
+your-project/
   go.mod
   features/*.feature
-  handlers/                  init() registers steps with apskit.DefaultRegistry
-  acceptance/generated/      generator output, plus one hand-written file:
-    handlers_init_test.go    blank-imports the handlers package
+  handlers/                       init() registers steps with apskit.DefaultRegistry
+  acceptance/generated/
+    handlers_init_test.go         hand-written, one-line blank import
+    *_acceptance_test.go          generated (gitignore these)
+    metadata/                     generated (gitignore this)
+  build/acceptance/               created by gherkin-parser (gitignore this)
 ```
 
-The blank-import file is one line per project and gives the generated
-`_test.go` package a stable hook back to your handlers. The generator does
-not write it because the import path is project-specific.
+## Script options
+
+Same env vars as the Python script: `FEATURES_DIR`, `IR_DIR`, `GENERATED_DIR`,
+`FEATURE`, `WORK_DIR`, `LEVEL`. Extra arguments pass through to `go test` or
+`gherkin-mutator`.
+
+## Generator CLI shape
+
+```
+acceptance-entrypoint-generator <json-ir> <generated-test-output>
+```
+
+Env vars:
+
+- `APS_FEATURE_PATH` overrides the feature path recorded in metadata.
+- `APS_PACKAGE` sets the Go package name for the generated test file
+  (default: `generated`).
+
+Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 
 ## Conformance notes
 
 - The generator emits one `Test_Scenario_<sIdx>_<Name>_Example_<eIdx>` per
   (scenario, example).
-- Generated tests read the IR via `APS_IR_PATH`; the default falls back to the
-  IR path that was current when `aps-generate` ran.
+- Generated tests read the IR via `APS_IR_PATH`; the fallback is the absolute
+  IR path captured when the generator ran. The script uses `realpath -m` so
+  the test binary (which `go test` runs with cwd = package dir) can locate
+  the IR.
 - `metadata/<feature-metadata-name>.json` follows the lowercase-and-hyphen
-  filename mapping and records `implementation_hash` over the generated `_test.go`
-  files only.
+  filename mapping and records `implementation_hash` over generated
+  `*_acceptance_test.go` files only.
 - The adapter classifies `go test` exit code 0 as `test_success`, 1 as
   `test_failure`, any other non-zero or non-exit error as
   `infrastructure_error`. Timeouts become `infrastructure_error`.

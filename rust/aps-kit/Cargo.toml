@@ -9,8 +9,8 @@ description = "Rust scaffolding for the Acceptance Pipeline Specification"
 path = "src/lib.rs"
 
 [[bin]]
-name = "aps-generate"
-path = "src/bin/aps-generate.rs"
+name = "acceptance-entrypoint-generator"
+path = "src/bin/acceptance-entrypoint-generator.rs"
 
 [[bin]]
 name = "aps-adapter"

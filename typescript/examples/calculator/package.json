@@ -1,0 +1,16 @@
+{
+  "name": "aps-kit-typescript-example-calculator",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "acceptance": "../../scripts/acceptance.sh"
+  },
+  "dependencies": {
+    "@aps-kit/typescript": "file:../.."
+  },
+  "devDependencies": {
+    "typescript": "^5.5",
+    "vitest": "^2"
+  }
+}

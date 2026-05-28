@@ -1,0 +1,28 @@
+build/
+dist/
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+*.tsbuildinfo
+target/
+Cargo.lock
+package-lock.json
+/bin/
+.idea/
+.vscode/
+.DS_Store
+*.log
+
+# Generated acceptance test files (aps-generate writes these on demand).
+# The hand-written handlers_init_test.go for the Go example stays committed.
+**/acceptance/generated/*_acceptance_test.py
+**/acceptance/generated/*.acceptance.test.ts
+**/acceptance/generated/calculator_acceptance_test.go
+**/acceptance/generated/metadata/
+rust/examples/*/tests/*_acceptance.rs
+rust/examples/*/tests/metadata/

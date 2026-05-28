@@ -1,0 +1,12 @@
+[package]
+name = "calculator"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+aps-kit = { path = "../../aps-kit" }
+serde_json = "1"

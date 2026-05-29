@@ -1,2 +1,0 @@
-exit=2
-usage: acceptance-entrypoint-generator <json-ir> <generated-test-output>

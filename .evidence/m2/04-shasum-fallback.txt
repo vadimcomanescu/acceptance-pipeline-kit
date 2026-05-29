@@ -1,3 +1,0 @@
-# AC-003 dual-hash-tool support: install.sh works on the shasum -a 256 path
-# (sha256sum hidden from PATH; shasum substituted). Exit 0, both binaries installed.
-shasum fallback path: install OK

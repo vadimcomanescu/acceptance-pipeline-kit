@@ -1,5 +1,0 @@
-parsing features/calculator.feature -> build/acceptance/calculator.json
-generating tests from build/acceptance/calculator.json into acceptance/generated
-running pytest against acceptance/generated
-.....                                                                    [100%]
-5 passed in 0.01s

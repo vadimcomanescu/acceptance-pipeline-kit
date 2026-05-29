@@ -1,2 +1,0 @@
-github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/acceptance-entrypoint-generator
-github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/aps-adapter

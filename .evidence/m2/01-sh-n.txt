@@ -1,2 +1,0 @@
-=== sh -n install.sh ===
-POSIX syntax OK (shellcheck unavailable -> waiver)

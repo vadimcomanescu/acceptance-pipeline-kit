@@ -1,9 +1,0 @@
-install.sh: installing v0.1.0 for linux_amd64 from file:///tmp/claude-1000/tmp.IQ9ksNbFMK/fixroot/v0.1.0
-install.sh: downloading gherkin-parser_v0.1.0_linux_amd64.tar.gz
-install.sh: verified gherkin-parser_v0.1.0_linux_amd64.tar.gz (14eaccbf56e72ebd7bd46ee6cb36647f28224d8ca767c4caa440892d2e954c67)
-install.sh: downloading gherkin-mutator_v0.1.0_linux_amd64.tar.gz
-install.sh: verified gherkin-mutator_v0.1.0_linux_amd64.tar.gz (f325e86412221f5cdfb0ea6e64e9cad3c6f04267f1e6fe46eec19af037e5bf25)
-install.sh: installed gherkin-parser -> /tmp/claude-1000/tmp.IQ9ksNbFMK/bin/gherkin-parser
-install.sh: installed gherkin-mutator -> /tmp/claude-1000/tmp.IQ9ksNbFMK/bin/gherkin-mutator
-install.sh: note: /tmp/claude-1000/tmp.IQ9ksNbFMK/bin is not on your PATH; add it, e.g.: export PATH="/tmp/claude-1000/tmp.IQ9ksNbFMK/bin:$PATH"
-install.sh: done.

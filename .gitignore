@@ -21,6 +21,10 @@ package-lock.json
 .DS_Store
 *.log
 
+# Shepherd working state + QA evidence logs (local process artifacts, not product).
+.shepherd/
+.evidence/
+
 # Generated acceptance test files (aps-generate writes these on demand).
 # The hand-written handlers_init_test.go for the Go example stays committed.
 **/acceptance/generated/*_acceptance_test.py

@@ -1,0 +1,179 @@
+== building fixture release v0.1.0 + installing prebuilt parser/mutator via install.sh
+cloning unclebob/Acceptance-Pipeline-Specification @ 56ae63a9efb6299af543504218b81c3d1b3f1dcf ...
+no upstream LICENSE at ref 56ae63a9efb6299af543504218b81c3d1b3f1dcf; archives carry NOTICE only
+building gherkin-parser for darwin/amd64 ...
+packaged gherkin-parser_v0.1.0_darwin_amd64.tar.gz
+building gherkin-mutator for darwin/amd64 ...
+packaged gherkin-mutator_v0.1.0_darwin_amd64.tar.gz
+building gherkin-parser for darwin/arm64 ...
+packaged gherkin-parser_v0.1.0_darwin_arm64.tar.gz
+building gherkin-mutator for darwin/arm64 ...
+packaged gherkin-mutator_v0.1.0_darwin_arm64.tar.gz
+building gherkin-parser for linux/amd64 ...
+packaged gherkin-parser_v0.1.0_linux_amd64.tar.gz
+building gherkin-mutator for linux/amd64 ...
+packaged gherkin-mutator_v0.1.0_linux_amd64.tar.gz
+building gherkin-parser for linux/arm64 ...
+packaged gherkin-parser_v0.1.0_linux_arm64.tar.gz
+building gherkin-mutator for linux/arm64 ...
+packaged gherkin-mutator_v0.1.0_linux_arm64.tar.gz
+building gherkin-parser for windows/amd64 ...
+packaged gherkin-parser_v0.1.0_windows_amd64.zip
+building gherkin-mutator for windows/amd64 ...
+packaged gherkin-mutator_v0.1.0_windows_amd64.zip
+
+wrote 10 archive(s) + checksums.txt into /tmp/claude-1000/tmp.n9OHJQznd2/raw
+install.sh: installing v0.1.0 for linux_amd64 from file:///tmp/claude-1000/tmp.n9OHJQznd2/fixroot/v0.1.0
+install.sh: downloading gherkin-parser_v0.1.0_linux_amd64.tar.gz
+install.sh: verified gherkin-parser_v0.1.0_linux_amd64.tar.gz (8ccd3d56c01aff2f395669ba5b913c3bbc2d8cf2eaf757ac6394c8d1f19b366b)
+install.sh: downloading gherkin-mutator_v0.1.0_linux_amd64.tar.gz
+install.sh: verified gherkin-mutator_v0.1.0_linux_amd64.tar.gz (58cd2f0ba34c675655c51dcf574003531cb8f0ca5db1f0bf74485572a2f6146d)
+install.sh: installed gherkin-parser -> /tmp/claude-1000/tmp.n9OHJQznd2/parser-bin/gherkin-parser
+install.sh: installed gherkin-mutator -> /tmp/claude-1000/tmp.n9OHJQznd2/parser-bin/gherkin-mutator
+install.sh: note: /tmp/claude-1000/tmp.n9OHJQznd2/parser-bin is not on your PATH; add it, e.g.: export PATH="/tmp/claude-1000/tmp.n9OHJQznd2/parser-bin:$PATH"
+install.sh: done.
+prebuilt binaries installed: gherkin-mutator gherkin-parser 
+== Python: pip install ./python[test] into a venv, run acceptance.sh
+WARNING: Cache entry deserialization failed, entry ignored
+WARNING: Cache entry deserialization failed, entry ignored
+WARNING: Cache entry deserialization failed, entry ignored
+WARNING: Cache entry deserialization failed, entry ignored
+WARNING: Cache entry deserialization failed, entry ignored
+parsing features/calculator.feature -> build/acceptance/calculator.json
+generating tests from build/acceptance/calculator.json into acceptance/generated
+running pytest against acceptance/generated
+.....                                                                    [100%]
+5 passed in 0.01s
+Python: 5 passed in 0.01s
+== TypeScript: npm install + build kit, npm install example, run acceptance.sh
+
+up to date, audited 115 packages in 684ms
+
+28 packages are looking for funding
+  run `npm fund` for details
+
+6 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+> @aps-kit/typescript@0.1.0 build
+> tsc -p tsconfig.json
+
+
+up to date, audited 49 packages in 710ms
+
+12 packages are looking for funding
+  run `npm fund` for details
+
+5 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+parsing features/calculator.feature -> build/acceptance/calculator.json
+generating tests from build/acceptance/calculator.json into acceptance/generated
+running vitest
+
+ RUN  v2.1.9 /home/vadim/Code/aps-wt-m4/typescript/examples/calculator
+
+ ✓ acceptance/generated/calculator.acceptance.test.ts (5 tests) 3ms
+
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  13:42:56
+   Duration  509ms (transform 62ms, setup 55ms, collect 10ms, tests 3ms, environment 0ms, prepare 126ms)
+
+TypeScript: Tests  5 passed (5)
+== Go: go install ./cmd/... into scratch GOBIN, run acceptance.sh
+parsing features/calculator.feature -> /home/vadim/Code/aps-wt-m4/go/examples/calculator/build/acceptance/calculator.json
+generating tests from /home/vadim/Code/aps-wt-m4/go/examples/calculator/build/acceptance/calculator.json into acceptance/generated
+running go test
+=== RUN   Test_Scenario_00_addition_Example_01
+--- PASS: Test_Scenario_00_addition_Example_01 (0.00s)
+=== RUN   Test_Scenario_00_addition_Example_02
+--- PASS: Test_Scenario_00_addition_Example_02 (0.00s)
+=== RUN   Test_Scenario_00_addition_Example_03
+--- PASS: Test_Scenario_00_addition_Example_03 (0.00s)
+=== RUN   Test_Scenario_01_subtraction_Example_01
+--- PASS: Test_Scenario_01_subtraction_Example_01 (0.00s)
+=== RUN   Test_Scenario_01_subtraction_Example_02
+--- PASS: Test_Scenario_01_subtraction_Example_02 (0.00s)
+PASS
+ok  	github.com/vadimcomanescu/acceptance-pipeline-kit/go/examples/calculator/acceptance/generated	0.003s
+Go: 5 tests passed (--- PASS: lines)
+== Rust: cargo install --path aps-kit into scratch root, run acceptance.sh
+parsing features/calculator.feature -> build/acceptance/calculator.json
+generating tests from build/acceptance/calculator.json into tests (handlers crate: calculator)
+running cargo test
+   Compiling calculator v0.0.0 (/home/vadim/Code/aps-wt-m4/rust/examples/calculator)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running unittests src/lib.rs (/home/vadim/Code/aps-wt-m4/rust/target/debug/deps/calculator-582c3d3fc87caf7d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/calculator_acceptance.rs (/home/vadim/Code/aps-wt-m4/rust/target/debug/deps/calculator_acceptance-e00a4360c041b26b)
+
+running 5 tests
+test scenario_00_addition_example_01 ... ok
+test scenario_00_addition_example_02 ... ok
+test scenario_01_subtraction_example_01 ... ok
+test scenario_01_subtraction_example_02 ... ok
+test scenario_00_addition_example_03 ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests calculator
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+Rust: test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+== Mutation: acceptance-mutation.sh LEVEL=full (prebuilt gherkin-mutator)
+status elapsed=0s total=15 completed=0 running=0 killed=0 survived=0 errors=0
+status elapsed=3.858s total=15 completed=15 running=0 killed=15 survived=0 errors=0
+total=15 killed=15 survived=0 errors=0
+killed   $.scenarios[0].examples[0].a: 1 -> 7
+killed   $.scenarios[0].examples[0].b: 2 -> 9
+killed   $.scenarios[0].examples[0].sum: 3 -> 9
+killed   $.scenarios[0].examples[1].a: 4 -> 12
+killed   $.scenarios[0].examples[1].b: 5 -> 6
+killed   $.scenarios[0].examples[1].sum: 9 -> 1
+killed   $.scenarios[0].examples[2].a: 0 -> -9
+killed   $.scenarios[0].examples[2].b: 0 -> 2
+killed   $.scenarios[0].examples[2].sum: 0 -> -2
+killed   $.scenarios[1].examples[0].a: 10 -> 7
+killed   $.scenarios[1].examples[0].b: 3 -> 4
+killed   $.scenarios[1].examples[0].diff: 7 -> 6
+killed   $.scenarios[1].examples[1].a: 5 -> 13
+killed   $.scenarios[1].examples[1].b: 5 -> -1
+killed   $.scenarios[1].examples[1].diff: 0 -> -3
+Mutation: total=15 killed=15 survived=0 errors=0
+== Source guard: assert no generator/adapter/runtime source changed vs merge-base
+merge-base with main: ce1be6c03b3662efbe4557d34862c0d318a5604f
+changed paths vs merge-base:
+  .evidence/m4/01-e2e-go-free.txt
+  .evidence/m4/02-install-go-free.txt
+  .evidence/m4/03-pytest.txt
+  .evidence/m4/10-regression.txt
+  .evidence/m4/11-python-acceptance.txt
+  .evidence/m4/12-typescript-acceptance.txt
+  .evidence/m4/13-go-acceptance.txt
+  .evidence/m4/14-rust-acceptance.txt
+  .evidence/m4/15-python-mutation.txt
+  .evidence/m4/16-changed-files.txt
+  scripts/tests/test_e2e_go_free.sh
+  scripts/tests/test_regression.sh
+Source guard: OK — only distribution/test/evidence files differ from merge-base
+
+test_regression: PASS — kit does not regress via the new install path:
+  - Python / TypeScript / Go / Rust acceptance: 5 passed each
+  - Mutation (prebuilt gherkin-mutator, LEVEL=full): total=15 killed=15 survived=0
+  - No generator/adapter/runtime source changed vs merge-base
+  evidence: /home/vadim/Code/aps-wt-m4/.evidence/m4/10-regression.txt + 11..16-*.txt under /home/vadim/Code/aps-wt-m4/.evidence/m4

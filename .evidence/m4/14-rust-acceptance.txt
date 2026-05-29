@@ -1,0 +1,28 @@
+parsing features/calculator.feature -> build/acceptance/calculator.json
+generating tests from build/acceptance/calculator.json into tests (handlers crate: calculator)
+running cargo test
+   Compiling calculator v0.0.0 (/home/vadim/Code/aps-wt-m4/rust/examples/calculator)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.16s
+     Running unittests src/lib.rs (/home/vadim/Code/aps-wt-m4/rust/target/debug/deps/calculator-582c3d3fc87caf7d)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/calculator_acceptance.rs (/home/vadim/Code/aps-wt-m4/rust/target/debug/deps/calculator_acceptance-e00a4360c041b26b)
+
+running 5 tests
+test scenario_00_addition_example_01 ... ok
+test scenario_00_addition_example_02 ... ok
+test scenario_01_subtraction_example_01 ... ok
+test scenario_01_subtraction_example_02 ... ok
+test scenario_00_addition_example_03 ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests calculator
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

@@ -1,0 +1,13 @@
+PASS: workflow has an `on` trigger
+PASS: trigger is strict-semver tag glob (['v[0-9]+.[0-9]+.[0-9]+'])
+PASS: all five target tuples present in builder TARGETS ([('darwin', 'amd64'), ('darwin', 'arm64'), ('linux', 'amd64'), ('linux', 'arm64'), ('windows', 'amd64')])
+PASS: builder declares EXACTLY the five targets (no more, no fewer)
+PASS: builder builds both gherkin-parser and gherkin-mutator
+PASS: builder produces checksums.txt
+PASS: workflow invokes the builder against dist/
+PASS: only secrets.GITHUB_TOKEN referenced (['GITHUB_TOKEN'])
+PASS: no registry-publish step (npm/pypi/cargo)
+PASS: workflow packs the TypeScript tarball (AC-008 wiring)
+PASS: workflow uploads to a GitHub Release
+
+ALL STATIC WORKFLOW ASSERTIONS PASSED

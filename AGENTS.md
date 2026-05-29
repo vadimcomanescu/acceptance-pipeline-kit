@@ -112,7 +112,7 @@ pass. Mutation runs (`scripts/acceptance-mutation.sh`) require the APS
 binaries on PATH; install them with `./install.sh`.
 
 A useful smoke test after touching the runtime or adapter: run
-`acceptance-mutation.sh --level full` and confirm all candidate mutations are
+`LEVEL=full acceptance-mutation.sh` and confirm all candidate mutations are
 killed. Surviving mutations against the calculator example almost always
 indicate a bug in the kit, not in the example.
 

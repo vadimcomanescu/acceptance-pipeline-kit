@@ -43,11 +43,14 @@ checksum-verified downloads, and the kit installs from a release-hosted tarball
    (it rides the same Release as the binaries), so install it by URL:
 
    ```bash
-   npm install https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/<tag>/aps-kit-typescript-<tag>.tgz
+   npm install https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/v0.1.0/aps-kit-typescript-0.1.0.tgz
    ```
 
-   Replace `<tag>` with a pushed release tag (e.g. `v0.1.0`). The kit has no
-   runtime dependencies. (`@aps-kit/typescript` is **not** published to the npm
+   The release tag is `v` + the package version; the tarball filename is the
+   package version **without** the `v` (npm pack names it
+   `aps-kit-typescript-<version>.tgz`). For another release, substitute both
+   (e.g. tag `v0.2.0` → `aps-kit-typescript-0.2.0.tgz`). The kit has no runtime
+   dependencies. (`@aps-kit/typescript` is **not** published to the npm
    registry; the Release tarball is the install source.)
 
 For local development against a checkout, use
@@ -74,7 +77,7 @@ Expected: five tests pass.
    above):
 
    ```bash
-   npm install --save-dev https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/<tag>/aps-kit-typescript-<tag>.tgz
+   npm install --save-dev https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/v0.1.0/aps-kit-typescript-0.1.0.tgz
    ```
 
    For local development against a checkout you can instead point at the

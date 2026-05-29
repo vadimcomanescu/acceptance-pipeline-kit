@@ -1,0 +1,24 @@
+total 21516
+drwxr-xr-x   2 vadim vadim     260 May 29 12:51 .
+drwxrwxrwt 317 root  root     8880 May 29 12:51 ..
+-rw-r--r--   1 vadim vadim    1077 May 29 12:51 checksums.txt
+-rw-r--r--   1 vadim vadim 2506057 May 29 12:50 gherkin-mutator_v0.1.0_darwin_amd64.tar.gz
+-rw-r--r--   1 vadim vadim 2356712 May 29 12:50 gherkin-mutator_v0.1.0_darwin_arm64.tar.gz
+-rw-r--r--   1 vadim vadim 2610103 May 29 12:50 gherkin-mutator_v0.1.0_linux_amd64.tar.gz
+-rw-r--r--   1 vadim vadim 2410880 May 29 12:51 gherkin-mutator_v0.1.0_linux_arm64.tar.gz
+-rw-r--r--   1 vadim vadim 2635478 May 29 12:51 gherkin-mutator_v0.1.0_windows_amd64.zip
+-rw-r--r--   1 vadim vadim 1967858 May 29 12:50 gherkin-parser_v0.1.0_darwin_amd64.tar.gz
+-rw-r--r--   1 vadim vadim 1855707 May 29 12:50 gherkin-parser_v0.1.0_darwin_arm64.tar.gz
+-rw-r--r--   1 vadim vadim 1923712 May 29 12:50 gherkin-parser_v0.1.0_linux_amd64.tar.gz
+-rw-r--r--   1 vadim vadim 1785154 May 29 12:51 gherkin-parser_v0.1.0_linux_arm64.tar.gz
+-rw-r--r--   1 vadim vadim 1955111 May 29 12:51 gherkin-parser_v0.1.0_windows_amd64.zip
+c59dbc9c1bac1b14edd72595d2d624930a527a3f2a3ab95c9768e8e40bf867d2  gherkin-mutator_v0.1.0_darwin_amd64.tar.gz
+4215b5cb99d25feca0a8485d09ae7f972ddbe1da3ef623e62abbcd78a49d771e  gherkin-mutator_v0.1.0_darwin_arm64.tar.gz
+92159a79b5c4fe67f98cc4c559fe0bc214c0a334c933bf04ca3e7df46268a099  gherkin-mutator_v0.1.0_linux_amd64.tar.gz
+fe093c03ea1f0836a3b293a8cf94fb13a2eb0fdb2fae896f425e340a5f2c2971  gherkin-mutator_v0.1.0_linux_arm64.tar.gz
+d0b677c55d94481d84730d8c971c9345887366be916ac53a7d250e945446dd40  gherkin-mutator_v0.1.0_windows_amd64.zip
+41220d2fe6eedad15401c83bc1d95f802a6c69396b27baf40be3e7f91470fbba  gherkin-parser_v0.1.0_darwin_amd64.tar.gz
+263a0ebfcbfd5a2c208f073efa0599763123e5bd2fb83c4fc3ee8e0144f762ea  gherkin-parser_v0.1.0_darwin_arm64.tar.gz
+144f10a16d5ce9bce481f4785d9cae1393ca7537789267a9216676f68ab2a598  gherkin-parser_v0.1.0_linux_amd64.tar.gz
+5e29931bc4950b8c3b142737c33ed3d844e3dfc6485119a101d20bf38cbceb96  gherkin-parser_v0.1.0_linux_arm64.tar.gz
+a2d39b56941a8a122a8fdc8b124be92269f0fb9afe288ec9f60babbbcefd93ea  gherkin-parser_v0.1.0_windows_amd64.zip

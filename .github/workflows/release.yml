@@ -1,0 +1,61 @@
+name: release
+
+# Cut a release by pushing a strict-semver tag (vMAJOR.MINOR.PATCH).
+# The maintainer's `git tag vX.Y.Z && git push --tags` is the ONLY trigger;
+# everything below runs in CI with the automatic GITHUB_TOKEN. No external
+# secret (PyPI/npm/etc.) is referenced or required.
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions:
+  contents: write  # required to create the GitHub Release and upload assets
+
+jobs:
+  release:
+    name: Build artifacts and publish GitHub Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # The builder cross-compiles BOTH gherkin-parser and gherkin-mutator for
+      # all five targets (darwin/amd64, darwin/arm64, linux/amd64, linux/arm64,
+      # windows/amd64), packages each with the attribution NOTICE, and writes a
+      # single dist/checksums.txt. It is the single producer of these artifacts,
+      # so the archive naming + checksums format cannot drift from the fixtures.
+      - name: Build release archives + checksums
+        env:
+          APS_RELEASE_VERSION: ${{ github.ref_name }}
+        run: sh scripts/build-release-artifacts.sh dist
+
+      # The TypeScript tarball rides the same Release so consumers can install
+      # @aps-kit/typescript with no clone and no npm token (AC-008). Build dist/
+      # first so the packed tarball is runnable.
+      - name: Build and pack the TypeScript tarball
+        working-directory: typescript
+        run: |
+          npm ci
+          npm run build
+          npm pack --pack-destination ../dist
+
+      - name: List artifacts
+        run: ls -la dist
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

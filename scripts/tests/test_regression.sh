@@ -216,7 +216,7 @@ EOF_CHANGED
 
 if [ -n "$VIOLATIONS" ]; then
   emit "FORBIDDEN source/non-distribution changes detected:"
-  printf "$VIOLATIONS" | sed 's/^/  /' | tee -a "$LOG"
+  printf '%b' "$VIOLATIONS" | sed 's/^/  /' | tee -a "$LOG"
   fail "distribution work changed files outside the allowed distribution/test/evidence set (AC-012)"
 fi
 emit "Source guard: OK — only distribution/test/evidence files differ from merge-base"

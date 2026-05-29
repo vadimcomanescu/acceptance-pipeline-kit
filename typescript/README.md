@@ -73,13 +73,8 @@ Expected: five tests pass.
 
 1. **Install the kit and APS binaries** (steps above; once per machine).
 
-2. **Add the kit as a dev dependency** from the release tarball (see Install
-   above):
-
-   ```bash
-   npm install --save-dev https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/v0.1.0/aps-kit-typescript-0.1.0.tgz
-   ```
-
+2. **Add the kit as a dev dependency.** Use the same release-tarball
+   `npm install` from the [Install](#install) section, adding `--save-dev`.
    For local development against a checkout you can instead point at the
    directory: `npm install --save-dev /path/to/acceptance-pipeline-kit/typescript`.
 

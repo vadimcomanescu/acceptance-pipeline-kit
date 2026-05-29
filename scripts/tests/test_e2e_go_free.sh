@@ -138,7 +138,7 @@ PATH="$RUN_PATH" APS_DIST_BASE_URL="file://$FIXROOT" \
   sh "$INSTALL_SH" --version "$TAG" --bin-dir "$BIN_DIR" \
   >"$INSTALL_LOG" 2>&1 \
   || { cat "$INSTALL_LOG" >>"$LOG"; fail "install.sh failed under Go-free PATH (see $INSTALL_LOG)"; }
-cat "$INSTALL_LOG" | tee -a "$LOG" >/dev/null
+cat "$INSTALL_LOG" >>"$LOG"
 
 # The binaries must have come from the verified archive, not a local compile:
 # assert install.sh emitted a checksum-verify line ("verified <archive> (<hash>)").
@@ -173,7 +173,7 @@ set +e
   >"$PYTEST_LOG" 2>&1
 RC=$?
 set -e
-cat "$PYTEST_LOG" | tee -a "$LOG" >/dev/null
+cat "$PYTEST_LOG" >>"$LOG"
 
 [ "$RC" -eq 0 ] || fail "acceptance.sh exited $RC (expected 0); see $PYTEST_LOG"
 

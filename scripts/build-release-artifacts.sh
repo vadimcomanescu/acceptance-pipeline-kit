@@ -184,4 +184,10 @@ sort -k2 "$CHECKSUMS" -o "$CHECKSUMS"
 archive_count="$(grep -c . "$CHECKSUMS" || true)"
 echo
 echo "wrote $archive_count archive(s) + checksums.txt into $OUT_DIR"
-[ "$archive_count" -eq 10 ] || die "expected 10 archives, got $archive_count"
+# Expected count is derived from the matrix (targets x tools), not hardcoded, so
+# adding a target or tool above auto-updates the guard instead of misfiring.
+n_targets="$(printf '%s\n' "$TARGETS" | grep -c .)"
+n_tools="$(printf '%s\n' "$TOOLS" | grep -c .)"
+expected_count="$((n_targets * n_tools))"
+[ "$archive_count" -eq "$expected_count" ] \
+  || die "expected $expected_count archives ($n_targets targets x $n_tools tools), got $archive_count"

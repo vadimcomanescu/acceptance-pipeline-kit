@@ -1,0 +1,33 @@
+# Mutation testing for install.sh (manual operators; no shell mutation tool on host)
+# Each mutant introduces one bug into install.sh; the suite is re-run.
+# KILLED = at least one test failed (good); SURVIVED = suite stayed green (gap).
+#
+# Procedure: cp install.sh backup; apply sed/python edit; sh -n; run suite; restore.
+
+KILLED  M1  checksum compare flipped ( != -> = )                 -> 4 passed / 4 failed
+KILLED  M2b detect_platform bypasses validation (always linux_amd64) -> 7 / 1 (unsupported-platform test)
+KILLED  M4  mismatch die drops the file name                     -> 7 / 1 (after test strengthened)
+KILLED  M5  mismatch die drops the actual hash                   -> 7 / 1
+KILLED  M6  platform resolution moved AFTER first download       -> 3 / 5 (before-download ordering enforced)
+KILLED  M7  mismatch die downgraded to log+continue              -> 7 / 1 (after tamper switched to checksums-line
+            corruption so the SHA-256 gate is the SOLE guard; a valid extractable archive
+            with a wrong recorded hash)
+KILLED  M9  --version argument ignored (always DEFAULT_VERSION)  -> 6 / 2
+
+SURVIVED (documented equivalent mutants for the real-builder fixture):
+  M3  `chmod +x "$src"` removed. EQUIVALENT on this path: the builder's tar/zip
+      archives already carry the executable bit (verified: extracted binary is
+      -rwxr-xr-x), so chmod is redundant defensive code for the fixture. Killing it
+      would require a non-exec fixture that diverges from real release output
+      (violates the spec fixture rule). chmod is retained as correct hardening.
+  M8  expected_sum field match ($2 == want) weakened to substring ($0 ~ want).
+      EQUIVALENT for the 10-archive set: no archive name is a problematic substring
+      of another given the checksums.txt format. Field-anchored match retained as the
+      robust form. No behavioral test can distinguish without a contrived colliding
+      fixture absent from real releases.
+
+# Two test strengthenings were driven by surviving mutants (per tdd-mutation):
+#  - mismatch message assertion now requires the file name AND both hashes ON the
+#    mismatch line (killed M4), not on any earlier "downloading" log line.
+#  - mismatch fixture now corrupts the checksums.txt entry (archive stays valid),
+#    isolating the SHA-256 comparison as the sole guard (killed M7).

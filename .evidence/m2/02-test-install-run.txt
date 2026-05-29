@@ -1,0 +1,11 @@
+# building fixtures (v0.1.0, v0.2.0) ...
+ok   - success path installs executable gherkin-parser and gherkin-mutator
+ok   - installed gherkin-parser executes
+ok   - second run is idempotent (exit 0, byte-identical)
+ok   - checksum mismatch is fatal and installs nothing
+ok   - unsupported platform fails before download with os/arch echoed
+ok   - --version v0.2.0 fetches from the v0.2.0 release dir
+ok   - --version with a missing release fails (no fallback)
+ok   - install.sh contains no go/go build/go install invocation
+
+# passed: 8  failed: 0

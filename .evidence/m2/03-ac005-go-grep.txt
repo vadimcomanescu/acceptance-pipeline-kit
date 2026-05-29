@@ -1,0 +1,1 @@
+# grep -nE '\bgo( |$|build|install)\b' install.sh -> no matches (AC-005-static PASS)

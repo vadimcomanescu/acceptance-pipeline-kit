@@ -17,6 +17,12 @@
 #
 # Style mirrors scripts/install-aps-tools.sh: POSIX sh, set -eu, all diagnostics
 # to stderr, checksum verification mandatory before anything lands on PATH.
+#
+# Integrity note: checksums.txt is fetched over the same channel as the archives,
+# so the SHA-256 check guards against corrupted/truncated downloads and a swapped
+# asset -- but it is not an independent signature. The trust root is the HTTPS
+# GitHub Release channel; an attacker able to replace both the archive and
+# checksums.txt on that channel would defeat the check.
 set -eu
 
 # --- configuration -----------------------------------------------------------

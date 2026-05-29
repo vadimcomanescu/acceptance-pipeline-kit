@@ -139,8 +139,9 @@ def main():
     )
 
     # Release upload step references github.token via GITHUB_TOKEN only.
+    # Match the action by name (pinned to a commit SHA), not a floating @vN tag.
     check(
-        "softprops/action-gh-release@v2" in wf_text or "gh release create" in wf_text,
+        "softprops/action-gh-release@" in wf_text or "gh release create" in wf_text,
         "workflow uploads to a GitHub Release",
         "workflow has no GitHub Release upload step",
     )

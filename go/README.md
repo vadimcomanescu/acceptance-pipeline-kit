@@ -22,12 +22,38 @@ Module path: `github.com/vadimcomanescu/acceptance-pipeline-kit/go`.
 
 ## Install
 
-```bash
-cd go
-go install ./cmd/acceptance-entrypoint-generator ./cmd/aps-adapter
-/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
-# ensure $(go env GOPATH)/bin is on PATH
-```
+1. **Install the prebuilt APS binaries.** Run `./install.sh` from a clone of
+   this repo (or pipe the repo's `install.sh` to `sh`). It detects your
+   OS/arch, downloads `gherkin-parser` and `gherkin-mutator` from the GitHub
+   Release, checksum-verifies them, and installs them into `$HOME/.local/bin`
+   (override with `--bin-dir`, pin a release with `--version <tag>`). These two
+   binaries are prebuilt downloads — they are never compiled on your machine.
+
+   ```bash
+   ./install.sh
+   # pin a specific release:
+   ./install.sh --version v0.1.0
+   ```
+
+   Make sure the install dir (`$HOME/.local/bin` by default) is on your `PATH`.
+
+2. **Install the Go kit binaries from git.** Go projects already have the
+   toolchain, so the kit's generator and adapter install with `go install`
+   (no clone needed):
+
+   ```bash
+   go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/acceptance-entrypoint-generator@<tag>
+   go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/aps-adapter@<tag>
+   ```
+
+   Replace `<tag>` with a pushed release tag (e.g. `v0.1.0`). Ensure
+   `$(go env GOPATH)/bin` is on your `PATH`.
+
+For local development against a checkout, use
+`cd go && go install ./cmd/acceptance-entrypoint-generator ./cmd/aps-adapter`.
+
+(Contributors and the release maintainer can build the parser/mutator from
+source instead — see the [contributor appendix](#contributor--maintainer-build-the-aps-binaries-from-source).)
 
 ## Try the demo
 
@@ -153,3 +179,17 @@ Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 - The adapter classifies `go test` exit code 0 as `test_success`, 1 as
   `test_failure`, any other non-zero or non-exit error as
   `infrastructure_error`. Timeouts become `infrastructure_error`.
+
+## Contributor / maintainer: build the APS binaries from source
+
+The prebuilt `./install.sh` path above is the recommended way to get
+`gherkin-parser`/`gherkin-mutator`. Contributors and the maintainer can instead
+build them from upstream source:
+
+```bash
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
+```
+
+This clones the upstream APS repo and builds both binaries into `$GOBIN`. Add
+`$GOBIN` to your `PATH`. This is a fallback for development on the kit, not the
+default install path.

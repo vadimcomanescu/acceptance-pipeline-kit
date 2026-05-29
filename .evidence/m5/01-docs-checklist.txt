@@ -1,0 +1,50 @@
+M5 / Task 5.1 — Docs lead with drop-in; source-build demoted (AC-010, AC-009 docs, AC-011 doc-pin)
+Branch: feature/aps-dist-m5-docs   Worktree: /home/vadim/Code/aps-wt-m5
+install.sh flags confirmed from install.sh: --version <tag> (default v0.1.0), --bin-dir <dir>
+  (default $HOME/.local/bin), env APS_DIST_BASE_URL.
+
+== AC-010 (a) prebuilt install.sh precedes first install-aps-tools.sh mention ==
+(prebuilt mention = "install.sh" not part of "install-aps-tools.sh")
+PASS  README.md          prebuilt@98   source@194
+PASS  AGENTS.md          prebuilt@55   source@60
+PASS  python/README.md   prebuilt@29   source@201
+PASS  typescript/README.md prebuilt@27 source@176
+PASS  go/README.md       prebuilt@25   source@190
+PASS  rust/README.md     prebuilt@25   source@183
+
+== AC-010 (b) every install-aps-tools.sh (source-build) instruction under a contributor/maintainer heading ==
+Each file has heading: "## Contributor / maintainer: build the APS binaries from source"
+  README.md@320  AGENTS.md@119  python@194  typescript@169  go@183  rust@176
+Source-build *instructions* (the actual install-aps-tools.sh command) all sit under that heading:
+  README.md@328  AGENTS.md@124  python@201  typescript@176  go@190  rust@183
+Two non-instruction mentions remain outside the heading, both explicitly demotion-framed (not ordering source first):
+  - README.md@194: Repository-layout description line, labeled "(contributor path)" — descriptive, not an install step.
+  - AGENTS.md@60 : Parenthetical inside adopt-step 2, AFTER the install.sh instruction, saying it is a
+                   "contributor/maintainer fallback — see the appendix below".
+Negative assertion holds: no install/quick-start/adopt section orders the source build before install.sh.
+
+== AC-010 AGENTS.md adopt-step 2 replaced ==
+Old: "Install the APS Go binaries with scripts/install-aps-tools.sh"
+New: step 2 now installs prebuilt binaries via ./install.sh (Go-free framing); source build demoted to appendix.
+
+== AC-010 source build NOT deleted ==
+install-aps-tools.sh remains documented in all 6 files (under the contributor/maintainer appendix).
+
+== AC-009 exact verified command strings present verbatim ==
+PASS python:  pip install "git+https://github.com/vadimcomanescu/acceptance-pipeline-kit@<tag>#subdirectory=python"   (python/README.md:46)
+PASS go bin1: go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/acceptance-entrypoint-generator@<tag>  (go/README.md:45)
+PASS go bin2: go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/aps-adapter@<tag>                      (go/README.md:46)
+PASS rust:    cargo install --git https://github.com/vadimcomanescu/acceptance-pipeline-kit --tag <tag> aps-kit          (rust/README.md:45)
+
+== AC-011 version-pinning examples present ==
+PASS install.sh --version <tag> shown in README.md, python, typescript, go, rust READMEs (e.g. "./install.sh --version v0.1.0")
+PASS @<tag> pin shown for Python (pip git+...@<tag>) and Go (go install ...@<tag>)
+PASS --tag <tag> pin shown for Rust (cargo install --git ... --tag <tag>)
+
+== TS install source (no PyPI/npm registry; release tarball) ==
+TS kit installed via GitHub Release tarball URL (aps-kit-typescript-<tag>.tgz), explicitly noted "not published to npm".
+Python/Go/Rust install from git. No registry-publish claims introduced.
+
+== Markdown link sanity ==
+All introduced anchor links (#contributor--maintainer-build-the-aps-binaries-from-source) resolve to an existing
+H2 in their own file (5 READMEs). README TOC entry added. No broken relative links introduced.

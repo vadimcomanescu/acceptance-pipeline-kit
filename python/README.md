@@ -23,11 +23,35 @@ Python scaffolding for the [Acceptance Pipeline Specification][aps].
 
 ## Install
 
-```bash
-cd python
-pip install -e .[test]
-/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh  # gherkin-parser, gherkin-mutator
-```
+**No Go toolchain required.** The two upstream binaries arrive as prebuilt,
+checksum-verified downloads; only the kit itself is installed with `pip`.
+
+1. **Install the prebuilt APS binaries.** Run `./install.sh` from a clone of
+   this repo (or pipe the repo's `install.sh` to `sh`). It detects your
+   OS/arch, downloads `gherkin-parser` and `gherkin-mutator` from the GitHub
+   Release, checksum-verifies them, and installs them into `$HOME/.local/bin`
+   (override with `--bin-dir`, pin a release with `--version <tag>`).
+
+   ```bash
+   ./install.sh
+   # pin a specific release:
+   ./install.sh --version v0.1.0
+   ```
+
+   Make sure the install dir (`$HOME/.local/bin` by default) is on your `PATH`.
+
+2. **Install the Python kit straight from git — no clone, no PyPI:**
+
+   ```bash
+   pip install "git+https://github.com/vadimcomanescu/acceptance-pipeline-kit@<tag>#subdirectory=python"
+   ```
+
+   Replace `<tag>` with a pushed release tag (e.g. `v0.1.0`) to pin the kit.
+
+For local development against a checkout, use `cd python && pip install -e .[test]`.
+
+(Contributors and the release maintainer can build the binaries from source
+instead — see the [contributor appendix](#contributor--maintainer-build-the-aps-binaries-from-source).)
 
 ## Try the demo
 
@@ -166,3 +190,17 @@ Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 - The adapter classifies pytest exit code 0 as `test_success`, 1 as
   `test_failure`, every other exit code as `infrastructure_error`. Timeouts
   also become `infrastructure_error`.
+
+## Contributor / maintainer: build the APS binaries from source
+
+The prebuilt `./install.sh` path above is the recommended way to get
+`gherkin-parser`/`gherkin-mutator`. Contributors and the maintainer can instead
+build them from upstream source:
+
+```bash
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh  # requires a Go toolchain
+```
+
+This clones the upstream APS repo and builds both binaries into `$GOBIN`. Add
+`$GOBIN` to your `PATH`. This is a fallback for development on the kit, not the
+default install path for a Python project.

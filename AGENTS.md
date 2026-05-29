@@ -52,7 +52,13 @@ implementations.
 When a user asks for "add acceptance tests to my project using APS", do this:
 
 1. Identify the project's language (Python, TS, Go, or Rust).
-2. Install the APS Go binaries with `scripts/install-aps-tools.sh`.
+2. Install the prebuilt APS binaries with `./install.sh` (from a clone, or pipe
+   the repo's `install.sh` to `sh`). It downloads and checksum-verifies
+   `gherkin-parser` and `gherkin-mutator` into `$HOME/.local/bin` (override with
+   `--bin-dir`, pin a release with `--version <tag>`). **No Go toolchain is
+   required** for non-Go projects — the binaries are prebuilt downloads, never
+   compiled on the user's machine. (The from-source `scripts/install-aps-tools.sh`
+   is a contributor/maintainer fallback — see the appendix below.)
 3. Install the kit for the user's language (see the per-language README).
 4. Write `features/*.feature` per the APS subset (see
    [`specs/parser-spec.md`](specs/parser-spec.md)) — supported keywords are
@@ -103,9 +109,22 @@ When a user asks for "add acceptance tests to my project using APS", do this:
 For any change to a language directory, run that language's
 `scripts/acceptance.sh` against the calculator example and confirm tests
 pass. Mutation runs (`scripts/acceptance-mutation.sh`) require the APS
-binaries on PATH; install with `scripts/install-aps-tools.sh`.
+binaries on PATH; install them with `./install.sh`.
 
 A useful smoke test after touching the runtime or adapter: run
 `acceptance-mutation.sh --level full` and confirm all candidate mutations are
 killed. Surviving mutations against the calculator example almost always
 indicate a bug in the kit, not in the example.
+
+## Contributor / maintainer: build the APS binaries from source
+
+Consumers should install the binaries via the prebuilt `./install.sh` path
+above. Contributors working on the kit and the release maintainer can instead
+build `gherkin-parser`/`gherkin-mutator` from upstream source with
+`scripts/install-aps-tools.sh` (requires a Go toolchain; installs into
+`$GOBIN`). This is a fallback, not the default adopt path.
+
+Releases are cut entirely by CI on a pushed semver tag — the only manual step
+is the maintainer running `git tag vX.Y.Z && git push --tags`, after which the
+workflow cross-compiles and attaches the binaries (with checksums) and the
+`@aps-kit/typescript` tarball to a GitHub Release using only `GITHUB_TOKEN`.

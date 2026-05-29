@@ -20,12 +20,44 @@ TypeScript scaffolding for the [Acceptance Pipeline Specification][aps].
 
 ## Install
 
-```bash
-cd typescript
-npm install
-npm run build
-/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
-```
+**No Go toolchain required.** The two upstream binaries arrive as prebuilt,
+checksum-verified downloads, and the kit installs from a release-hosted tarball
+— no clone and no npm registry credential.
+
+1. **Install the prebuilt APS binaries.** Run `./install.sh` from a clone of
+   this repo (or pipe the repo's `install.sh` to `sh`). It detects your
+   OS/arch, downloads `gherkin-parser` and `gherkin-mutator` from the GitHub
+   Release, checksum-verifies them, and installs them into `$HOME/.local/bin`
+   (override with `--bin-dir`, pin a release with `--version <tag>`).
+
+   ```bash
+   ./install.sh
+   # pin a specific release:
+   ./install.sh --version v0.1.0
+   ```
+
+   Make sure the install dir (`$HOME/.local/bin` by default) is on your `PATH`.
+
+2. **Install the TypeScript kit from the release tarball — no clone, no npm
+   token.** The `@aps-kit/typescript` tarball is attached to the GitHub Release
+   (it rides the same Release as the binaries), so install it by URL:
+
+   ```bash
+   npm install https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/v0.1.0/aps-kit-typescript-0.1.0.tgz
+   ```
+
+   The release tag is `v` + the package version; the tarball filename is the
+   package version **without** the `v` (npm pack names it
+   `aps-kit-typescript-<version>.tgz`). For another release, substitute both
+   (e.g. tag `v0.2.0` → `aps-kit-typescript-0.2.0.tgz`). The kit has no runtime
+   dependencies. (`@aps-kit/typescript` is **not** published to the npm
+   registry; the Release tarball is the install source.)
+
+For local development against a checkout, use
+`cd typescript && npm install && npm run build`.
+
+(Contributors and the release maintainer can build the binaries from source
+instead — see the [contributor appendix](#contributor--maintainer-build-the-aps-binaries-from-source).)
 
 ## Try the demo
 
@@ -41,11 +73,15 @@ Expected: five tests pass.
 
 1. **Install the kit and APS binaries** (steps above; once per machine).
 
-2. **Add the kit as a dev dependency.**
+2. **Add the kit as a dev dependency** from the release tarball (see Install
+   above):
 
    ```bash
-   npm install --save-dev /path/to/acceptance-pipeline-kit/typescript
+   npm install --save-dev https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download/v0.1.0/aps-kit-typescript-0.1.0.tgz
    ```
+
+   For local development against a checkout you can instead point at the
+   directory: `npm install --save-dev /path/to/acceptance-pipeline-kit/typescript`.
 
 3. **Write a feature file** under `features/`.
 
@@ -132,3 +168,17 @@ Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 - The adapter classifies vitest exit code 0 as `test_success`, 1 as
   `test_failure`, every other exit code as `infrastructure_error`. Timeouts
   become `infrastructure_error`.
+
+## Contributor / maintainer: build the APS binaries from source
+
+The prebuilt `./install.sh` path above is the recommended way to get
+`gherkin-parser`/`gherkin-mutator`. Contributors and the maintainer can instead
+build them from upstream source:
+
+```bash
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh  # requires a Go toolchain
+```
+
+This clones the upstream APS repo and builds both binaries into `$GOBIN`. Add
+`$GOBIN` to your `PATH`. This is a fallback for development on the kit, not the
+default install path for a TypeScript project.

@@ -39,6 +39,7 @@ you don't rewrite the same plumbing every time.
 - [Troubleshooting](#troubleshooting)
 - [Multiple features and handler files](#multiple-features-and-handler-files)
 - [Conformance to the APS spec](#conformance-to-the-aps-spec)
+- [Contributor / maintainer: build from source](#contributor--maintainer-build-the-aps-binaries-from-source)
 - [License](#license)
 
 ## How the pipeline works
@@ -91,14 +92,37 @@ them in this order:
 These steps are language-agnostic; pick the section under "Per-language setup"
 for the language-specific commands.
 
-1. **Install the APS Go binaries once.**
+1. **Install the APS binaries once — prebuilt, no Go toolchain required.**
 
    ```
-   /path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
+   ./install.sh
    ```
 
-   This clones the upstream APS repo and builds `gherkin-parser` and
-   `gherkin-mutator` into `$GOBIN`. Add `$GOBIN` to your `PATH`.
+   Run from a clone of this repo (or pipe the repo's `install.sh` to `sh`).
+   `install.sh` detects your OS/arch, downloads the prebuilt `gherkin-parser`
+   and `gherkin-mutator` from the GitHub Release, checksum-verifies them, and
+   installs them into `$HOME/.local/bin`. **No Go toolchain is needed** — the
+   binaries arrive as verified downloads and are never compiled on your
+   machine. This is what makes the kit drop-in for Python and TypeScript
+   projects.
+
+   ```
+   # from a clone:
+   ./install.sh
+   # or without cloning, piping the repo's installer to sh:
+   curl -fsSL https://raw.githubusercontent.com/vadimcomanescu/acceptance-pipeline-kit/main/install.sh | sh
+   ```
+
+   Useful flags:
+
+   - `--bin-dir <dir>` — install somewhere other than `$HOME/.local/bin`.
+   - `--version <tag>` — pin to a specific release tag, e.g.
+     `./install.sh --version v0.1.0`.
+
+   If `$HOME/.local/bin` is not already on your `PATH`, add it.
+
+   (Contributors and the release maintainer can instead build the binaries
+   from source — see the [Contributor / maintainer appendix](#contributor--maintainer-build-the-aps-binaries-from-source).)
 
 2. **Install the kit for your language** (see per-language setup below).
 
@@ -166,7 +190,8 @@ the generated tests, and running both the normal and mutation pipelines.
 ```
 specs/                 vendored copy of the APS spec docs (read these first)
 features/              shared sample Gherkin used by every language's example
-scripts/               install-aps-tools.sh builds the Go binaries from upstream
+install.sh             prebuilt-binary installer (download + checksum-verify)
+scripts/               install-aps-tools.sh builds the Go binaries from source (contributor path)
 python/                Python implementation + calculator example
 typescript/            TypeScript implementation + calculator example
 go/                    Go implementation + calculator example
@@ -227,8 +252,8 @@ spelling and case.
 not actually asserting the example value. Make sure the handler reads
 `ex[...]` and compares it to project state.
 
-**`gherkin-parser: command not found` or similar.** Run
-`scripts/install-aps-tools.sh` once and add `$(go env GOPATH)/bin` to your
+**`gherkin-parser: command not found` or similar.** Run `./install.sh` once
+and make sure the install dir (`$HOME/.local/bin` by default) is on your
 `PATH`.
 
 **Mutator says "worker exited" for every job.** The runner adapter died
@@ -290,7 +315,34 @@ Empirical proof: `gherkin-mutator`, installed unmodified from upstream, kills
 example in **all four languages** — Python, TypeScript, Go, and Rust. Each
 example commits the resulting `acceptance-mutation-manifest` back into its
 feature file. Re-verify any language yourself with
-`<lang>/scripts/acceptance-mutation.sh` after `scripts/install-aps-tools.sh`.
+`<lang>/scripts/acceptance-mutation.sh` after `./install.sh`.
+
+## Contributor / maintainer: build the APS binaries from source
+
+The drop-in path above (`./install.sh`) is how consumers should install the
+APS binaries. The from-source build below exists for **contributors** working
+on the kit and for the **maintainer** who cuts releases — it is not the
+default install path.
+
+```
+/path/to/acceptance-pipeline-kit/scripts/install-aps-tools.sh
+```
+
+This clones the upstream APS repo and builds `gherkin-parser` and
+`gherkin-mutator` from source into `$GOBIN` (requires a Go toolchain). Add
+`$GOBIN` to your `PATH`.
+
+**Maintainer — cutting a release.** Releases are produced entirely by CI on a
+pushed semver tag; the only manual step is:
+
+```
+git tag vX.Y.Z && git push --tags
+```
+
+The tag-triggered workflow cross-compiles the two binaries for every supported
+platform, attaches them (with SHA-256 checksums) plus the `@aps-kit/typescript`
+tarball to a GitHub Release, using only the automatic `GITHUB_TOKEN`. No PyPI
+or npm credentials are involved.
 
 ## License
 

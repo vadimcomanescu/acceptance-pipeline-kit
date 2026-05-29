@@ -56,6 +56,16 @@ mkdir -p "$OUT_DIR"
 # Absolute path so the build can cd into the upstream checkout freely.
 OUT_DIR="$(cd "$OUT_DIR" && pwd)"
 
+# Remove artifacts from a prior run in a reused out-dir. Otherwise stale
+# archives (e.g. a previous VERSION) would remain on disk: they are NOT listed
+# in the freshly truncated checksums.txt, yet `files: dist/*` in release.yml
+# would still upload them, and a reused fixture dir would carry archives the
+# checksums do not cover. Clearing here keeps the out-dir exactly == this run's
+# output, so the single-producer invariant holds: every archive present is one
+# the current run produced and checksummed (AC-006c/d). Only the artifact shapes
+# this script emits are removed; unrelated files in the dir are left untouched.
+rm -f "$OUT_DIR"/checksums.txt "$OUT_DIR"/*.tar.gz "$OUT_DIR"/*.zip
+
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 UPSTREAM_DIR="$WORK_DIR/upstream"

@@ -1,0 +1,2 @@
+exit=0
+usage: aps-adapter <test-cmd> [test-args...]

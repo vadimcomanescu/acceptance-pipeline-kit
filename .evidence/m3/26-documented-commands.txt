@@ -1,0 +1,12 @@
+# Exact no-clone git-install commands verified by this proof (AC-009).
+# <tag> is a placeholder for a pushed semver tag, e.g. v0.1.0.
+
+Python:
+  pip install "git+https://github.com/vadimcomanescu/acceptance-pipeline-kit@<tag>#subdirectory=python"
+
+Go:
+  go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/acceptance-entrypoint-generator@<tag>
+  go install github.com/vadimcomanescu/acceptance-pipeline-kit/go/cmd/aps-adapter@<tag>
+
+Rust:
+  cargo install --git https://github.com/vadimcomanescu/acceptance-pipeline-kit --tag <tag> aps-kit

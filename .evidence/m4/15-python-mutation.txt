@@ -1,5 +1,5 @@
 status elapsed=0s total=15 completed=0 running=0 killed=0 survived=0 errors=0
-status elapsed=3.858s total=15 completed=15 running=0 killed=15 survived=0 errors=0
+status elapsed=13.449s total=15 completed=15 running=0 killed=15 survived=0 errors=0
 total=15 killed=15 survived=0 errors=0
 killed   $.scenarios[0].examples[0].a: 1 -> 7
 killed   $.scenarios[0].examples[0].b: 2 -> 9

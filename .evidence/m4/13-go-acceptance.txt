@@ -1,0 +1,15 @@
+parsing features/calculator.feature -> /home/vadim/Code/aps-wt-m4/go/examples/calculator/build/acceptance/calculator.json
+generating tests from /home/vadim/Code/aps-wt-m4/go/examples/calculator/build/acceptance/calculator.json into acceptance/generated
+running go test
+=== RUN   Test_Scenario_00_addition_Example_01
+--- PASS: Test_Scenario_00_addition_Example_01 (0.00s)
+=== RUN   Test_Scenario_00_addition_Example_02
+--- PASS: Test_Scenario_00_addition_Example_02 (0.00s)
+=== RUN   Test_Scenario_00_addition_Example_03
+--- PASS: Test_Scenario_00_addition_Example_03 (0.00s)
+=== RUN   Test_Scenario_01_subtraction_Example_01
+--- PASS: Test_Scenario_01_subtraction_Example_01 (0.00s)
+=== RUN   Test_Scenario_01_subtraction_Example_02
+--- PASS: Test_Scenario_01_subtraction_Example_02 (0.00s)
+PASS
+ok  	github.com/vadimcomanescu/acceptance-pipeline-kit/go/examples/calculator/acceptance/generated	0.003s

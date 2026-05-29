@@ -1,0 +1,18 @@
+status elapsed=0s total=15 completed=0 running=0 killed=0 survived=0 errors=0
+status elapsed=3.858s total=15 completed=15 running=0 killed=15 survived=0 errors=0
+total=15 killed=15 survived=0 errors=0
+killed   $.scenarios[0].examples[0].a: 1 -> 7
+killed   $.scenarios[0].examples[0].b: 2 -> 9
+killed   $.scenarios[0].examples[0].sum: 3 -> 9
+killed   $.scenarios[0].examples[1].a: 4 -> 12
+killed   $.scenarios[0].examples[1].b: 5 -> 6
+killed   $.scenarios[0].examples[1].sum: 9 -> 1
+killed   $.scenarios[0].examples[2].a: 0 -> -9
+killed   $.scenarios[0].examples[2].b: 0 -> 2
+killed   $.scenarios[0].examples[2].sum: 0 -> -2
+killed   $.scenarios[1].examples[0].a: 10 -> 7
+killed   $.scenarios[1].examples[0].b: 3 -> 4
+killed   $.scenarios[1].examples[0].diff: 7 -> 6
+killed   $.scenarios[1].examples[1].a: 5 -> 13
+killed   $.scenarios[1].examples[1].b: 5 -> -1
+killed   $.scenarios[1].examples[1].diff: 0 -> -3

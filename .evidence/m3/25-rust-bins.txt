@@ -1,0 +1,2 @@
+acceptance-entrypoint-generator
+aps-adapter

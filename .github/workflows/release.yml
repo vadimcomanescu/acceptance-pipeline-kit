@@ -46,7 +46,9 @@ jobs:
       - name: Build and pack the TypeScript tarball
         working-directory: typescript
         run: |
-          npm ci
+          # package-lock.json is gitignored in this repo, so use `npm install`
+          # (not `npm ci`, which requires a committed lockfile).
+          npm install
           npm run build
           npm pack --pack-destination ../dist
 

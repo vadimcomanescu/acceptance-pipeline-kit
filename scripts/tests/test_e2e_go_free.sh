@@ -12,7 +12,7 @@
 # from which `go` and `gofmt` are removed.
 #
 # Go-scrub recipe (this host: `go`/`gofmt` live in /usr/bin alongside curl/
-# sha256sum/tar/unzip/cargo; python3/pytest are under mise, NOT /usr/bin). Go has
+# sha256sum/tar/cargo; python3/pytest are under mise, NOT /usr/bin). Go has
 # no private dir, so we cannot drop "the Go dir". Instead build a clean bin dir
 # that symlinks every /usr/bin entry EXCEPT `go` and `gofmt` (a DENY-LIST — an
 # allow-list would silently drop the bash interpreter and the coreutils the
@@ -143,7 +143,7 @@ cat "$INSTALL_LOG" >>"$LOG"
 # The binaries must have come from the verified archive, not a local compile:
 # assert install.sh emitted a checksum-verify line ("verified <archive> (<hash>)").
 note "asserting install.sh checksum-verify line is present (binaries from archive, not compiled)"
-CHECKSUM_LINE="$(grep -E 'verified .*\.(tar\.gz|zip) \([0-9a-f]{64}\)' "$INSTALL_LOG" | head -n1 || true)"
+CHECKSUM_LINE="$(grep -E 'verified .*\.tar\.gz \([0-9a-f]{64}\)' "$INSTALL_LOG" | head -n1 || true)"
 emit "checksum-verify line: ${CHECKSUM_LINE:-<none>}"
 [ -n "$CHECKSUM_LINE" ] || fail "no checksum-verify line in install output (cannot prove binaries came from the archive)"
 

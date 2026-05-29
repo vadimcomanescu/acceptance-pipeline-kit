@@ -24,10 +24,12 @@ Rust scaffolding for the [Acceptance Pipeline Specification][aps].
 
 1. **Install the prebuilt APS binaries.** Run `./install.sh` from a clone of
    this repo (or pipe the repo's `install.sh` to `sh`). It detects your
-   OS/arch, downloads `gherkin-parser` and `gherkin-mutator` from the GitHub
-   Release, checksum-verifies them, and installs them into `$HOME/.local/bin`
-   (override with `--bin-dir`, pin a release with `--version <tag>`). These two
-   binaries are prebuilt downloads — they are never compiled on your machine.
+   OS/arch, resolves the latest GitHub Release, downloads `gherkin-parser` and
+   `gherkin-mutator`, checksum-verifies them, and installs them into
+   `$HOME/.local/bin` (override with `--bin-dir`, pin a release with
+   `--version <tag>`). Supported installer platforms are Linux amd64/arm64 and
+   macOS amd64/arm64. These two binaries are prebuilt downloads — they are
+   never compiled on your machine.
 
    ```bash
    ./install.sh

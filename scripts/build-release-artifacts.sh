@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Build the APS release payload: cross-compiles the two upstream Go binaries
 # (gherkin-parser, gherkin-mutator) for the supported OS/arch matrix, packages
-# each (tool x target) as an archive containing the binary + attribution NOTICE
+# each (tool x target) as a tar.gz archive containing the binary + attribution NOTICE
 # (+ upstream LICENSE iff one exists at the pinned ref), and writes a single
 # checksums.txt covering every archive.
 #
@@ -29,12 +29,11 @@ UPSTREAM_SLUG="unclebob/Acceptance-Pipeline-Specification"
 TOOLS="gherkin-parser ./cmd/gherkin-parser
 gherkin-mutator ./cmd/gherkin-mutator"
 
-# Target matrix: "<os> <arch>" per line. Exactly these five (AC-006a).
+# Target matrix: "<os> <arch>" per line. Exactly these four (AC-006a).
 TARGETS="darwin amd64
 darwin arm64
 linux amd64
-linux arm64
-windows amd64"
+linux arm64"
 
 # --- helpers -----------------------------------------------------------------
 
@@ -50,7 +49,6 @@ command -v go >/dev/null 2>&1 || die "go is required to cross-compile the upstre
 command -v git >/dev/null 2>&1 || die "git is required to clone the upstream repository"
 command -v sha256sum >/dev/null 2>&1 || die "sha256sum is required to write checksums.txt"
 command -v tar >/dev/null 2>&1 || die "tar is required to package unix archives"
-command -v zip >/dev/null 2>&1 || die "zip is required to package windows archives"
 
 mkdir -p "$OUT_DIR"
 # Absolute path so the build can cd into the upstream checkout freely.
@@ -129,11 +127,6 @@ build_one() {
   _tool="$1"; _pkg="$2"; _os="$3"; _arch="$4"
 
   _bin_name="$_tool"
-  _archive_ext="tar.gz"
-  if [ "$_os" = "windows" ]; then
-    _bin_name="$_tool.exe"
-    _archive_ext="zip"
-  fi
 
   # Staging dir holds exactly what goes inside the archive.
   _stage="$WORK_DIR/stage/${_tool}_${_os}_${_arch}"
@@ -151,14 +144,10 @@ build_one() {
   cp "$NOTICE_FILE" "$_stage/NOTICE"
   [ -n "$UPSTREAM_LICENSE" ] && cp "$UPSTREAM_LICENSE" "$_stage/LICENSE"
 
-  _archive="${_tool}_${VERSION}_${_os}_${_arch}.${_archive_ext}"
-  if [ "$_archive_ext" = "zip" ]; then
-    ( cd "$_stage" && zip -q -X "$OUT_DIR/$_archive" ./* )
-  else
-    # Deterministic-ish tar: sorted entries, fixed owner.
-    ( cd "$_stage" && tar --sort=name --owner=0 --group=0 --numeric-owner \
-        -czf "$OUT_DIR/$_archive" ./* )
-  fi
+  _archive="${_tool}_${VERSION}_${_os}_${_arch}.tar.gz"
+  # Deterministic-ish tar: sorted entries, fixed owner.
+  ( cd "$_stage" && tar --sort=name --owner=0 --group=0 --numeric-owner \
+      -czf "$OUT_DIR/$_archive" ./* )
 
   ( cd "$OUT_DIR" && sha256sum "$_archive" >> "$CHECKSUMS" )
   echo "packaged $_archive"

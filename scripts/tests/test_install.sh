@@ -5,9 +5,10 @@
 # single artifact producer (scripts/build-release-artifacts.sh), served over
 # file:// via the APS_DIST_BASE_URL seam -- no network, no live GitHub Release.
 #
-# Fixture layout mirrors a real release URL: <FIXROOT>/<tag>/<archives + checksums.txt>.
-# install.sh resolves ${APS_DIST_BASE_URL}/<tag>/<archive>, so APS_DIST_BASE_URL
-# points at file://<FIXROOT>.
+# Fixture layout mirrors release download URLs:
+#   <FIXROOT>/<tag>/<archives + checksums.txt>     pinned installs
+#   <FIXROOT>/latest/<archives + checksums.txt>    bare latest install alias
+# APS_DIST_BASE_URL points at file://<FIXROOT>.
 #
 # Usage: scripts/tests/test_install.sh
 # Exit:  0 = all behaviors pass; non-zero = a behavior failed.
@@ -42,6 +43,8 @@ build_fixture() {
 echo "# building fixtures (v0.1.0, v0.2.0) ..." >&2
 build_fixture v0.1.0
 build_fixture v0.2.0
+mkdir -p "$FIXROOT/latest"
+cp "$FIXROOT/v0.2.0"/* "$FIXROOT/latest/"
 
 BASE_URL="file://$FIXROOT"
 
@@ -125,6 +128,29 @@ test_idempotent_second_run() {
 }
 
 # ---------------------------------------------------------------------------
+# Behavior: bare install resolves the latest release alias by default, not a
+# hardcoded tag. The fixture's latest alias points at v0.2.0.
+# ---------------------------------------------------------------------------
+test_bare_install_uses_latest_release() {
+  bindir="$WORKROOT/bin_latest"
+  rm -rf "$bindir"
+  out_file="$WORKROOT/latest_out"
+  if APS_DIST_BASE_URL="$BASE_URL" sh "$INSTALL_SH" --bin-dir "$bindir" \
+       >"$out_file" 2>&1; then
+    if grep -q "from file://.*/latest" "$out_file" \
+       && grep -q "gherkin-parser_v0.2.0_${HOST_OS}_${HOST_ARCH}.tar.gz" "$out_file" \
+       && ! grep -q "gherkin-parser_v0.1.0_${HOST_OS}_${HOST_ARCH}.tar.gz" "$out_file"; then
+      pass "bare install resolves and installs the latest release"
+    else
+      fail "bare install resolves and installs the latest release" \
+           "output did not prove latest/v0.2.0 was used: $(cat "$out_file")"
+    fi
+  else
+    fail "bare install resolves and installs the latest release" "install.sh exited non-zero"
+  fi
+}
+
+# ---------------------------------------------------------------------------
 # Behavior: checksum mismatch is fatal -- non-zero exit, stderr names file +
 # both hashes, no binary installed, no temp leftover in bin dir.
 # ---------------------------------------------------------------------------
@@ -153,7 +179,7 @@ test_checksum_mismatch_fatal() {
   bindir="$WORKROOT/bin_tamper"
   rm -rf "$bindir"
   stderr_file="$WORKROOT/tamper_stderr"
-  if APS_DIST_BASE_URL="file://$tamperroot" sh "$INSTALL_SH" --bin-dir "$bindir" \
+  if APS_DIST_BASE_URL="file://$tamperroot" sh "$INSTALL_SH" --version v0.1.0 --bin-dir "$bindir" \
        >/dev/null 2>"$stderr_file"; then
     fail "checksum mismatch is fatal and installs nothing" "install.sh exited 0 on tampered archive"
     return
@@ -218,6 +244,11 @@ EOF
   ok=1; why=""
   grep -q "FreeBSD" "$stderr_file" || { ok=0; why="stderr lacks detected os 'FreeBSD'"; }
   grep -q "riscv64" "$stderr_file" || { ok=0; why="${why:+$why; }stderr lacks detected arch 'riscv64'"; }
+  grep -q "darwin_amd64, darwin_arm64, linux_amd64, linux_arm64" "$stderr_file" \
+    || { ok=0; why="${why:+$why; }stderr does not list the supported macOS/Linux matrix"; }
+  if grep -qi "windows" "$stderr_file"; then
+    ok=0; why="${why:+$why; }stderr teaches Windows as supported"
+  fi
   if [ -f "$WORKROOT/curl_called" ]; then
     ok=0; why="${why:+$why; }download was attempted before platform check"
   fi
@@ -248,6 +279,30 @@ test_version_flag_selects_release() {
     fi
   else
     fail "--version v0.2.0 fetches from the v0.2.0 release dir" "install.sh exited non-zero"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Behavior (static): installer does not retain a hardcoded default release tag.
+# ---------------------------------------------------------------------------
+test_no_hardcoded_default_version() {
+  if grep -q '^DEFAULT_VERSION=' "$INSTALL_SH"; then
+    fail "bare install has no hardcoded default release tag" \
+         "$(grep -n '^DEFAULT_VERSION=' "$INSTALL_SH")"
+  else
+    pass "bare install has no hardcoded default release tag"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# Behavior (static): Windows is not in the active installer support contract.
+# ---------------------------------------------------------------------------
+test_no_windows_installer_path() {
+  if grep -nEi 'windows|\.exe|unzip|\.zip' "$INSTALL_SH" >/dev/null 2>&1; then
+    fail "install.sh does not teach or handle Windows as supported" \
+         "$(grep -nEi 'windows|\.exe|unzip|\.zip' "$INSTALL_SH")"
+  else
+    pass "install.sh does not teach or handle Windows as supported"
   fi
 }
 
@@ -287,10 +342,13 @@ test_no_go_invocation() {
 test_success_installs_both_binaries
 test_installed_parser_runs
 test_idempotent_second_run
+test_bare_install_uses_latest_release
 test_checksum_mismatch_fatal
 test_unsupported_platform_fails_before_download
 test_version_flag_selects_release
 test_version_flag_no_fallback
+test_no_hardcoded_default_version
+test_no_windows_installer_path
 test_no_go_invocation
 
 echo

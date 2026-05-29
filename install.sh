@@ -5,15 +5,18 @@
 # never compiled here.
 #
 # Usage:
-#   ./install.sh                      install the default release into ~/.local/bin
+#   ./install.sh                      install the latest release into ~/.local/bin
 #   ./install.sh --version <tag>      pin to a specific release tag (e.g. v0.1.0)
 #   ./install.sh --bin-dir <dir>      install into <dir> instead of ~/.local/bin
 #
-# Download source is the GitHub Release for the resolved tag. The base URL is
-# overridable via APS_DIST_BASE_URL (a download-base seam used by the test
-# fixtures to serve a local release over file://). The final asset URL is
+# Download source is the latest GitHub Release unless --version pins a tag.
+# APS_DIST_BASE_URL is a download-base seam used by tests to serve local
+# releases over file://. Pinned installs fetch:
 #   ${APS_DIST_BASE_URL}/<tag>/<archive>
-# which mirrors GitHub's .../releases/download/<tag>/<asset> layout.
+# Bare installs fetch:
+#   ${APS_DIST_BASE_URL}/latest/<archive>
+# When APS_DIST_BASE_URL is unset, bare installs use GitHub's
+# .../releases/latest/download/<asset> layout.
 #
 # Style mirrors scripts/install-aps-tools.sh: POSIX sh, set -eu, all diagnostics
 # to stderr, checksum verification mandatory before anything lands on PATH.
@@ -27,13 +30,13 @@ set -eu
 
 # --- configuration -----------------------------------------------------------
 
-# Default release tag. Pinned so a bare `./install.sh` is reproducible; override
-# with --version <tag>. Bump this constant when cutting a new default release.
-DEFAULT_VERSION="v0.1.0"
-
 # Download-base seam. Defaults to the project's GitHub Releases download root;
-# tests point it at a local fixture via file://.
-BASE="${APS_DIST_BASE_URL:-https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download}"
+# tests point it at a local fixture via file://. GitHub's latest-release route
+# does not sit under /releases/download, so bare installs use LATEST_URL when no
+# local test seam is provided.
+DEFAULT_BASE="https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/download"
+DEFAULT_LATEST_URL="https://github.com/vadimcomanescu/acceptance-pipeline-kit/releases/latest/download"
+BASE="${APS_DIST_BASE_URL:-$DEFAULT_BASE}"
 
 # The two upstream tools this installer places on PATH.
 TOOLS="gherkin-parser
@@ -44,7 +47,7 @@ gherkin-mutator"
 die() { echo "install.sh: $*" >&2; exit 1; }
 log() { echo "install.sh: $*" >&2; }
 
-# detect_platform -- map `uname` output to one of the five supported targets and
+# detect_platform -- map `uname` output to one of the four supported targets and
 # echo "<os>_<arch>". Fails closed (before any download) on anything outside the
 # matrix, naming the EXACT detected os and arch strings (AC-004).
 detect_platform() {
@@ -63,15 +66,15 @@ detect_platform() {
     *)             _arch="" ;;
   esac
 
-  # Validate against the exact five-target matrix. Any miss is fatal with the
+  # Validate against the exact four-target matrix. Any miss is fatal with the
   # raw detected strings echoed (not the mapped ones), so the user sees what
   # their machine actually reports.
   if [ -z "$_os" ] || [ -z "$_arch" ]; then
-    die "unsupported platform: os='$_raw_os' arch='$_raw_arch' (detected os/arch is outside the supported matrix: darwin_amd64, darwin_arm64, linux_amd64, linux_arm64, windows_amd64)"
+    die "unsupported platform: os='$_raw_os' arch='$_raw_arch' (detected os/arch is outside the supported matrix: darwin_amd64, darwin_arm64, linux_amd64, linux_arm64)"
   fi
   case "${_os}_${_arch}" in
-    darwin_amd64|darwin_arm64|linux_amd64|linux_arm64|windows_amd64) ;;
-    *) die "unsupported platform: os='$_raw_os' arch='$_raw_arch' (resolved ${_os}_${_arch} is outside the supported matrix: darwin_amd64, darwin_arm64, linux_amd64, linux_arm64, windows_amd64)" ;;
+    darwin_amd64|darwin_arm64|linux_amd64|linux_arm64) ;;
+    *) die "unsupported platform: os='$_raw_os' arch='$_raw_arch' (resolved ${_os}_${_arch} is outside the supported matrix: darwin_amd64, darwin_arm64, linux_amd64, linux_arm64)" ;;
   esac
 
   echo "${_os}_${_arch}"
@@ -95,9 +98,21 @@ sha256_of() {
 expected_sum() {
   _checksums="$1"; _name="$2"
   # Match the line whose filename field equals <name> exactly (avoid substring
-  # collisions between e.g. _amd64 and ..._amd64.zip by anchoring on the field).
+  # collisions between platform suffixes by anchoring on the field).
   awk -v want="$_name" '{ if ($2 == want) { print $1; found=1 } } END { exit (found ? 0 : 1) }' \
     "$_checksums"
+}
+
+# latest_archive_name <checksums-file> <tool> <os> <arch> -- echo the one
+# matching archive name for a latest-release install. The version is discovered
+# from checksums.txt because latest GitHub Release URLs do not expose the tag in
+# the download path, while archive names still include it.
+latest_archive_name() {
+  _checksums="$1"; _tool="$2"; _os="$3"; _arch="$4"
+  awk -v tool="$_tool" -v os="$_os" -v arch="$_arch" '
+    $2 ~ "^" tool "_v[^_]+_" os "_" arch "\\.tar\\.gz$" { found=$2; count++ }
+    END { if (count == 1) { print found; exit 0 } exit 1 }
+  ' "$_checksums"
 }
 
 # fetch <url> <dest> -- download <url> to <dest> via curl, failing on HTTP error.
@@ -109,7 +124,7 @@ fetch() {
 
 # --- argument parsing --------------------------------------------------------
 
-VERSION="$DEFAULT_VERSION"
+VERSION=""
 BIN_DIR="$HOME/.local/bin"
 
 while [ "$#" -gt 0 ]; do
@@ -127,7 +142,7 @@ while [ "$#" -gt 0 ]; do
     -h|--help)
       cat >&2 <<EOF
 Usage: install.sh [--version <tag>] [--bin-dir <dir>]
-  --version <tag>   release tag to install (default: $DEFAULT_VERSION)
+  --version <tag>   release tag to install (default: latest GitHub Release)
   --bin-dir <dir>   install directory (default: \$HOME/.local/bin)
 Environment:
   APS_DIST_BASE_URL  download base (default: GitHub Releases download root)
@@ -145,16 +160,21 @@ PLATFORM="$(detect_platform)"
 OS="${PLATFORM%_*}"
 ARCH="${PLATFORM#*_}"
 
-# Archive extension: zip on windows, tar.gz elsewhere -- matches the builder.
 EXT="tar.gz"
-if [ "$OS" = "windows" ]; then
-  EXT="zip"
-fi
 
 command -v curl >/dev/null 2>&1 || die "curl is required to download release assets"
 
-RELEASE_URL="${BASE}/${VERSION}"
-log "installing $VERSION for ${OS}_${ARCH} from ${RELEASE_URL}"
+if [ -n "$VERSION" ]; then
+  RELEASE_URL="${BASE}/${VERSION}"
+  log "installing $VERSION for ${OS}_${ARCH} from ${RELEASE_URL}"
+else
+  if [ -n "${APS_DIST_BASE_URL:-}" ]; then
+    RELEASE_URL="${BASE}/latest"
+  else
+    RELEASE_URL="$DEFAULT_LATEST_URL"
+  fi
+  log "installing latest release for ${OS}_${ARCH} from ${RELEASE_URL}"
+fi
 
 # --- download into a trapped temp dir ----------------------------------------
 
@@ -168,7 +188,12 @@ fetch "${RELEASE_URL}/checksums.txt" "$CHECKSUMS"
 # the bin dir until ALL archives have passed checksum verification, so a
 # mismatch (AC-003) leaves the bin dir untouched.
 for tool in $TOOLS; do
-  archive="${tool}_${VERSION}_${OS}_${ARCH}.${EXT}"
+  if [ -n "$VERSION" ]; then
+    archive="${tool}_${VERSION}_${OS}_${ARCH}.${EXT}"
+  else
+    archive="$(latest_archive_name "$CHECKSUMS" "$tool" "$OS" "$ARCH")" \
+      || die "no latest archive for $tool ${OS}_${ARCH} in checksums.txt"
+  fi
   archive_path="$TMP_DIR/$archive"
   log "downloading $archive"
   fetch "${RELEASE_URL}/${archive}" "$archive_path"
@@ -187,16 +212,16 @@ done
 # Extraction also stays in the temp dir; the bin dir only receives the final,
 # verified binaries via an atomic-ish move below.
 for tool in $TOOLS; do
-  archive="${tool}_${VERSION}_${OS}_${ARCH}.${EXT}"
+  if [ -n "$VERSION" ]; then
+    archive="${tool}_${VERSION}_${OS}_${ARCH}.${EXT}"
+  else
+    archive="$(latest_archive_name "$CHECKSUMS" "$tool" "$OS" "$ARCH")" \
+      || die "no latest archive for $tool ${OS}_${ARCH} in checksums.txt"
+  fi
   archive_path="$TMP_DIR/$archive"
   extract_dir="$TMP_DIR/extract_${tool}"
   mkdir -p "$extract_dir"
-  if [ "$EXT" = "zip" ]; then
-    command -v unzip >/dev/null 2>&1 || die "unzip is required to extract $archive"
-    unzip -q -o "$archive_path" -d "$extract_dir" || die "failed to extract $archive"
-  else
-    tar -xzf "$archive_path" -C "$extract_dir" || die "failed to extract $archive"
-  fi
+  tar -xzf "$archive_path" -C "$extract_dir" || die "failed to extract $archive"
 done
 
 # --- install into the bin dir ------------------------------------------------
@@ -205,7 +230,6 @@ mkdir -p "$BIN_DIR"
 
 for tool in $TOOLS; do
   bin_name="$tool"
-  [ "$OS" = "windows" ] && bin_name="$tool.exe"
   src="$TMP_DIR/extract_${tool}/$bin_name"
   [ -f "$src" ] || die "expected binary $bin_name not found inside ${tool} archive"
   chmod +x "$src"

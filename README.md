@@ -99,12 +99,13 @@ for the language-specific commands.
    ```
 
    Run from a clone of this repo (or pipe the repo's `install.sh` to `sh`).
-   `install.sh` detects your OS/arch, downloads the prebuilt `gherkin-parser`
-   and `gherkin-mutator` from the GitHub Release, checksum-verifies them, and
-   installs them into `$HOME/.local/bin`. **No Go toolchain is needed** — the
-   binaries arrive as verified downloads and are never compiled on your
-   machine. This is what makes the kit drop-in for Python and TypeScript
-   projects.
+   `install.sh` detects your OS/arch, resolves the latest GitHub Release,
+   downloads the prebuilt `gherkin-parser` and `gherkin-mutator`,
+   checksum-verifies them, and installs them into `$HOME/.local/bin`. Supported
+   installer platforms are Linux amd64/arm64 and macOS amd64/arm64. **No Go
+   toolchain is needed** — the binaries arrive as verified downloads and are
+   never compiled on your machine. This is what makes the kit drop-in for
+   Python and TypeScript projects.
 
    ```
    # from a clone:
@@ -116,7 +117,7 @@ for the language-specific commands.
    Useful flags:
 
    - `--bin-dir <dir>` — install somewhere other than `$HOME/.local/bin`.
-   - `--version <tag>` — pin to a specific release tag, e.g.
+   - `--version <tag>` — pin to a specific release instead of latest, e.g.
      `./install.sh --version v0.1.0`.
 
    If `$HOME/.local/bin` is not already on your `PATH`, add it.
@@ -333,16 +334,23 @@ This clones the upstream APS repo and builds `gherkin-parser` and
 `$GOBIN` to your `PATH`.
 
 **Maintainer — cutting a release.** Releases are produced entirely by CI on a
-pushed semver tag; the only manual step is:
+pushed semver tag. The tag must equal `v` plus `typescript/package.json`
+`version`, or CI fails before building or publishing artifacts. The manual
+release step is:
 
 ```
 git tag vX.Y.Z && git push --tags
 ```
 
-The tag-triggered workflow cross-compiles the two binaries for every supported
-platform, attaches them (with SHA-256 checksums) plus the `@aps-kit/typescript`
-tarball to a GitHub Release, using only the automatic `GITHUB_TOKEN`. No PyPI
-or npm credentials are involved.
+The tag-triggered workflow cross-compiles the two binaries for Linux
+amd64/arm64 and macOS amd64/arm64, attaches them (with SHA-256 checksums) plus
+the `@aps-kit/typescript` tarball to a GitHub Release, using only the automatic
+`GITHUB_TOKEN`. No PyPI or npm credentials are involved.
+
+Manual macOS release verification, when no macOS CI job is added: on both
+`darwin_amd64` and `darwin_arm64` hosts, run `./install.sh --version vX.Y.Z`,
+then run `gherkin-parser` with no arguments and confirm it prints its usage
+line rather than failing to execute.
 
 ## License
 

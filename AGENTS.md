@@ -53,12 +53,14 @@ When a user asks for "add acceptance tests to my project using APS", do this:
 
 1. Identify the project's language (Python, TS, Go, or Rust).
 2. Install the prebuilt APS binaries with `./install.sh` (from a clone, or pipe
-   the repo's `install.sh` to `sh`). It downloads and checksum-verifies
-   `gherkin-parser` and `gherkin-mutator` into `$HOME/.local/bin` (override with
-   `--bin-dir`, pin a release with `--version <tag>`). **No Go toolchain is
-   required** for non-Go projects — the binaries are prebuilt downloads, never
-   compiled on the user's machine. (The from-source `scripts/install-aps-tools.sh`
-   is a contributor/maintainer fallback — see the appendix below.)
+   the repo's `install.sh` to `sh`). It resolves the latest GitHub Release by
+   default, downloads and checksum-verifies `gherkin-parser` and
+   `gherkin-mutator` into `$HOME/.local/bin` (override with `--bin-dir`, pin a
+   release with `--version <tag>`). Supported installer platforms are Linux
+   amd64/arm64 and macOS amd64/arm64. **No Go toolchain is required** for
+   non-Go projects — the binaries are prebuilt downloads, never compiled on the
+   user's machine. (The from-source `scripts/install-aps-tools.sh` is a
+   contributor/maintainer fallback — see the appendix below.)
 3. Install the kit for the user's language (see the per-language README).
 4. Write `features/*.feature` per the APS subset (see
    [`specs/parser-spec.md`](specs/parser-spec.md)) — supported keywords are
@@ -124,7 +126,8 @@ build `gherkin-parser`/`gherkin-mutator` from upstream source with
 `scripts/install-aps-tools.sh` (requires a Go toolchain; installs into
 `$GOBIN`). This is a fallback, not the default adopt path.
 
-Releases are cut entirely by CI on a pushed semver tag — the only manual step
-is the maintainer running `git tag vX.Y.Z && git push --tags`, after which the
-workflow cross-compiles and attaches the binaries (with checksums) and the
+Releases are cut entirely by CI on a pushed semver tag that matches
+`v` + `typescript/package.json` version — the only manual step is the
+maintainer running `git tag vX.Y.Z && git push --tags`, after which the workflow
+cross-compiles and attaches the binaries (with checksums) and the
 `@aps-kit/typescript` tarball to a GitHub Release using only `GITHUB_TOKEN`.

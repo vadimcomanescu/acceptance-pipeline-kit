@@ -70,23 +70,35 @@ test_success_installs_both_binaries() {
 }
 
 # ---------------------------------------------------------------------------
-# Behavior: installed gherkin-parser actually runs.
+# Behavior: the installed gherkin-parser actually executes (not merely present
+# and +x). The installed binary is the host-native target built into the
+# fixture, so it really runs here. We assert it ran -- emitting its own output
+# without an exec/not-found failure -- rather than just inspecting the file
+# mode. A no-arg run prints a usage line (observed exit 2); we require that
+# usage line so a non-runnable file (wrong arch, truncated) is caught.
 # ---------------------------------------------------------------------------
 test_installed_parser_runs() {
   bindir="$WORKROOT/bin_runs"
   rm -rf "$bindir"
-  APS_DIST_BASE_URL="$BASE_URL" sh "$INSTALL_SH" --bin-dir "$bindir" >/dev/null 2>&1 || true
-  if [ -x "$bindir/gherkin-parser" ] && "$bindir/gherkin-parser" >/dev/null 2>&1; status=$?; then
-    # parser with no args may exit 0 or non-zero (usage); we only require it to
-    # be a real executable that runs without "exec format" / not-found errors.
+  if ! APS_DIST_BASE_URL="$BASE_URL" sh "$INSTALL_SH" --bin-dir "$bindir" >/dev/null 2>&1; then
+    fail "installed gherkin-parser executes" "install.sh exited non-zero"
+    return
+  fi
+  if [ ! -x "$bindir/gherkin-parser" ]; then
+    fail "installed gherkin-parser executes" "binary missing or not executable"
+    return
+  fi
+  # Capture both streams and the exit code. A no-arg run exits non-zero (usage),
+  # so guard the assignment against `set -e`. A failure to exec (e.g. 127
+  # "not found" / "exec format error") yields no usage output.
+  rc=0
+  out="$("$bindir/gherkin-parser" 2>&1)" || rc=$?
+  if [ "$rc" -eq 127 ]; then
+    fail "installed gherkin-parser executes" "binary could not be executed (exit 127)"
+  elif printf '%s' "$out" | grep -q 'usage: gherkin-parser'; then
     pass "installed gherkin-parser executes"
   else
-    # Distinguish "ran and chose to exit non-zero" from "could not exec".
-    if [ -x "$bindir/gherkin-parser" ]; then
-      pass "installed gherkin-parser executes"
-    else
-      fail "installed gherkin-parser executes" "not executable"
-    fi
+    fail "installed gherkin-parser executes" "binary ran but did not emit its usage line (exit $rc): $out"
   fi
 }
 
@@ -220,12 +232,9 @@ EOF
 # Behavior: --version <tag> drives which release dir is fetched.
 # ---------------------------------------------------------------------------
 test_version_flag_selects_release() {
-  # Remove v0.2.0's parser archive so that if install.sh fetched from v0.1.0
-  # (wrong), it would succeed; fetching from v0.2.0 (right) must still succeed
-  # because v0.2.0 is complete. To prove selection, instead make v0.1.0 BROKEN
-  # and request v0.2.0: success proves it did NOT read v0.1.0. And vice-versa is
-  # covered by the default-tag success test. Here we positively assert the
-  # archive fetched belongs to v0.2.0 by inspecting install.sh's own report.
+  # Both v0.1.0 and v0.2.0 fixtures exist. Request v0.2.0 and assert install.sh's
+  # own report references the v0.2.0 release dir and never the v0.1.0 one -- so
+  # the requested tag, not the default, drove which release dir was fetched.
   bindir="$WORKROOT/bin_v2"
   rm -rf "$bindir"
   out_file="$WORKROOT/v2_out"

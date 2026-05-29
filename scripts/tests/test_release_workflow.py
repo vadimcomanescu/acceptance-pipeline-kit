@@ -36,6 +36,25 @@ def fail(msg):
     sys.exit(1)
 
 
+def parse_targets(builder_text):
+    """Extract the (os, arch) tuples from the builder's TARGETS assignment.
+
+    Parsing the TARGETS block specifically -- rather than scanning the whole
+    script for OS/arch tokens -- keeps the assertion from matching stray
+    mentions in comments or the NOTICE heredoc, and asserts against the actual
+    data the build loop iterates.
+    """
+    m = re.search(r'^TARGETS="(.*?)"', builder_text, re.DOTALL | re.MULTILINE)
+    if not m:
+        fail("could not locate the TARGETS assignment in the builder")
+    targets = set()
+    for line in m.group(1).splitlines():
+        fields = line.split()
+        if len(fields) == 2:
+            targets.add((fields[0], fields[1]))
+    return targets
+
+
 def check(cond, ok_msg, fail_msg):
     if not cond:
         fail(fail_msg)
@@ -61,7 +80,7 @@ def main():
 
     # (AC-006a/b) all five target tuples appear in the builder's matrix (the
     # single producer the workflow invokes).
-    found = set(re.findall(r"\b(darwin|linux|windows) (amd64|arm64)\b", builder_text))
+    found = parse_targets(builder_text)
     check(
         EXPECTED_TARGETS.issubset(found),
         f"all five target tuples present in builder TARGETS ({sorted(found)})",

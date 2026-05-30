@@ -171,9 +171,10 @@ Exit codes: `0` success, `1` IO/generation error, `2` usage error.
 - `metadata/<feature-metadata-name>.json` follows the lowercase-and-hyphen
   filename mapping and records `implementation_hash` over generated `.rs`
   files only.
-- The adapter classifies `cargo test` exit code 0 as `test_success`, 1 as
-  `test_failure`, any other non-zero or non-exit error as
-  `infrastructure_error`. Timeouts become `infrastructure_error`.
+- The adapter classifies `cargo test` exit code 0 as `test_success`, 1 or 101
+  (the code `cargo test` returns on assertion failure) as `test_failure`, any
+  other non-zero or non-exit error as `infrastructure_error`. Timeouts become
+  `infrastructure_error`.
 
 ## Contributor / maintainer: build the APS binaries from source
 

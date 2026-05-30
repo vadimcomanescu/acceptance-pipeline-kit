@@ -32,10 +32,11 @@ fi
 for feature in "${features[@]}"; do
   stem="$(basename "$feature" .feature)"
   # IR path is absolute because `go test` runs the test binary with cwd=package
-  # dir; a relative IR path would not resolve. The feature path stays relative
-  # so the metadata filename matches the spec examples
-  # (features-calculator-feature.json).
-  ir="$(realpath -m "$IR_DIR/${stem}.json")"
+  # dir; a relative IR path would not resolve. We build it with `cd … && pwd`
+  # rather than `realpath -m` so it stays portable (macOS realpath has no -m).
+  # The feature path stays relative so the metadata filename matches the spec
+  # examples (features-calculator-feature.json).
+  ir="$(cd "$IR_DIR" && pwd)/${stem}.json"
   echo "parsing $feature -> $ir"
   gherkin-parser "$feature" "$ir"
   echo "generating tests from $ir into $GENERATED_DIR"

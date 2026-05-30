@@ -81,7 +81,7 @@ pub fn generate(opts: GenerateOptions<'_>) -> Result<Vec<PathBuf>, String> {
         body.push_str(&format!("fn {fn_name}() {{\n"));
         body.push_str("    ensure_registered();\n");
         body.push_str(&format!(
-            "    run_execution(&ir_path(), {s_idx}, {e_idx}, None).expect(\"acceptance failure\");\n"
+            "    run_execution(ir_path(), {s_idx}, {e_idx}, None).expect(\"acceptance failure\");\n"
         ));
         body.push_str("}\n\n");
     }

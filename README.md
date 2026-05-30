@@ -319,7 +319,8 @@ The kit is built strictly against the three spec docs vendored at
   nanoseconds.
 - **Outcome classification**: exit 0 → `test_success`, exit 1 →
   `test_failure`, anything else (including timeout) →
-  `infrastructure_error`.
+  `infrastructure_error`. (The Rust adapter additionally maps exit 101 — what
+  `cargo test` returns on assertion failure — to `test_failure`.)
 
 Empirical proof: `gherkin-mutator`, installed unmodified from upstream, kills
 15/15 mutations (9 in `addition`, 6 in `subtraction`) against the calculator

@@ -1,7 +1,39 @@
 # acceptance-pipeline-kit
 
-Per-language scaffolding for the [Acceptance Pipeline Specification][aps] (APS),
-ready to drop into a Python, TypeScript, Go, or Rust project.
+Drop-in scaffolding that brings the [Acceptance Pipeline Specification][aps]
+(APS) to Python, TypeScript, Go, and Rust projects.
+
+You write Gherkin `.feature` files and step handlers; the kit generates and
+runs acceptance tests in your language — then runs **acceptance mutation** to
+prove those tests actually check your example values instead of just passing.
+
+The two upstream binaries it relies on (`gherkin-parser`, `gherkin-mutator`)
+install as prebuilt, checksum-verified downloads, so **no Go toolchain is
+required** — not even for Python and TypeScript projects. That is what makes
+the kit drop-in.
+
+The repo is **acceptance-pipeline-kit**; the installable packages are
+collectively **aps-kit** — the `aps_kit` Python package, the
+`@aps-kit/typescript` npm package, the `apskit` Go package, and the `aps-kit`
+Rust crate. The spec docs are vendored under [`specs/`](specs/) and are
+authoritative; read them in the order under [Reading the spec](#reading-the-spec).
+
+[aps]: https://github.com/unclebob/Acceptance-Pipeline-Specification
+
+## Contents
+
+- [Who supplies what](#who-supplies-what)
+- [How the pipeline works](#how-the-pipeline-works)
+- [Quick start](#quick-start-in-your-own-project)
+- [Per-language setup](#per-language-setup)
+- [Critical rules for writing step handlers](#critical-rules-for-writing-step-handlers)
+- [Troubleshooting](#troubleshooting)
+- [Multiple features and handler files](#multiple-features-and-handler-files)
+- [Repository layout](#repository-layout)
+- [Reading the spec](#reading-the-spec)
+- [Conformance to the APS spec](#conformance-to-the-aps-spec)
+- [Appendix: contributors and maintainers](#appendix-contributors-and-maintainers)
+- [License](#license)
 
 ## Who supplies what
 
@@ -24,23 +56,6 @@ you don't rewrite the same plumbing every time.
 > Acceptance mutation means mutating Gherkin example values in the
 > specification-derived JSON IR. It does not mean conventional mutation testing
 > of application source code.
-
-[aps]: https://github.com/unclebob/Acceptance-Pipeline-Specification
-
-## Contents
-
-- [Who supplies what](#who-supplies-what)
-- [How the pipeline works](#how-the-pipeline-works)
-- [Reading the spec](#reading-the-spec)
-- [Quick start](#quick-start-in-your-own-project)
-- [Per-language setup](#per-language-setup)
-- [Repository layout](#repository-layout)
-- [Critical rules for writing step handlers](#critical-rules-for-writing-step-handlers)
-- [Troubleshooting](#troubleshooting)
-- [Multiple features and handler files](#multiple-features-and-handler-files)
-- [Conformance to the APS spec](#conformance-to-the-aps-spec)
-- [Contributor / maintainer: build from source](#contributor--maintainer-build-the-aps-binaries-from-source)
-- [License](#license)
 
 ## How the pipeline works
 
@@ -77,16 +92,6 @@ The five per-project pieces in this kit are exactly what APS describes:
 | Runner adapter | A persistent process the mutator pipes mutated IRs into via stdin/stdout. |
 | Convenience scripts | `acceptance.sh` and `acceptance-mutation.sh` per language. |
 
-## Reading the spec
-
-The spec docs are vendored under [`specs/`](specs/) and are authoritative. Read
-them in this order:
-
-1. [`specs/APS-README.md`](specs/APS-README.md) — pipeline shape and component map.
-2. [`specs/parser-spec.md`](specs/parser-spec.md) — the JSON IR this kit consumes.
-3. [`specs/acceptance-generator.md`](specs/acceptance-generator.md) — generator command, runtime contract, step-handler contract, metadata, hashing.
-4. [`specs/mutator-spec.md`](specs/mutator-spec.md) — mutator behavior and the runner-adapter protocol.
-
 ## Quick start (in your own project)
 
 These steps are language-agnostic; pick the section under "Per-language setup"
@@ -94,25 +99,19 @@ for the language-specific commands.
 
 1. **Install the APS binaries once — prebuilt, no Go toolchain required.**
 
-   ```
+   ```bash
+   # from a clone of this repo:
    ./install.sh
+   # or without cloning, pipe the repo's installer to sh:
+   curl -fsSL https://raw.githubusercontent.com/vadimcomanescu/acceptance-pipeline-kit/main/install.sh | sh
    ```
 
-   Run from a clone of this repo (or pipe the repo's `install.sh` to `sh`).
    `install.sh` detects your OS/arch, resolves the latest GitHub Release,
    downloads the prebuilt `gherkin-parser` and `gherkin-mutator`,
    checksum-verifies them, and installs them into `$HOME/.local/bin`. Supported
    installer platforms are Linux amd64/arm64 and macOS amd64/arm64. **No Go
    toolchain is needed** — the binaries arrive as verified downloads and are
-   never compiled on your machine. This is what makes the kit drop-in for
-   Python and TypeScript projects.
-
-   ```
-   # from a clone:
-   ./install.sh
-   # or without cloning, piping the repo's installer to sh:
-   curl -fsSL https://raw.githubusercontent.com/vadimcomanescu/acceptance-pipeline-kit/main/install.sh | sh
-   ```
+   never compiled on your machine.
 
    Useful flags:
 
@@ -123,7 +122,7 @@ for the language-specific commands.
    If `$HOME/.local/bin` is not already on your `PATH`, add it.
 
    (Contributors and the release maintainer can instead build the binaries
-   from source — see the [Contributor / maintainer appendix](#contributor--maintainer-build-the-aps-binaries-from-source).)
+   from source — see the [appendix](#appendix-contributors-and-maintainers).)
 
 2. **Install the kit for your language** (see per-language setup below).
 
@@ -179,37 +178,14 @@ code. Each one covers: installing the kit for that language, writing handlers
 with the idiomatic registration mechanism, wiring those handlers to load before
 the generated tests, and running both the normal and mutation pipelines.
 
-| Language | Run the calculator demo (after installing the kit — see guide) | Full guide |
+With the kit installed for your language, run its demo from the project root:
+
+| Language | Demo command | Full guide |
 | --- | --- | --- |
 | Python | `cd python/examples/calculator && ../../scripts/acceptance.sh` | [python/README.md](python/README.md) |
 | TypeScript | `cd typescript/examples/calculator && npm install && ../../scripts/acceptance.sh` | [typescript/README.md](typescript/README.md) |
 | Go | `cd go/examples/calculator && ../../scripts/acceptance.sh` | [go/README.md](go/README.md) |
 | Rust | `cd rust/examples/calculator && HANDLERS_CRATE=calculator ../../scripts/acceptance.sh` | [rust/README.md](rust/README.md) |
-
-## Repository layout
-
-```
-specs/                 vendored copy of the APS spec docs (read these first)
-features/              shared sample Gherkin used by every language's example
-install.sh             prebuilt-binary installer (download + checksum-verify)
-scripts/               install-aps-tools.sh builds the Go binaries from source (contributor path)
-python/                Python implementation + calculator example
-typescript/            TypeScript implementation + calculator example
-go/                    Go implementation + calculator example
-rust/                  Rust implementation + calculator example
-```
-
-Per-language directories all follow the same shape:
-
-```
-<lang>/
-  <library code>                          IR loader, runtime, step-handler registry
-  cmd/acceptance-entrypoint-generator/    APS-conformant generator CLI
-  cmd/aps-adapter/                        runner adapter (persistent NDJSON worker)
-  examples/calculator/                    end-to-end demo
-  scripts/acceptance.sh                   normal acceptance pipeline
-  scripts/acceptance-mutation.sh          acceptance-mutation pipeline
-```
 
 ## Critical rules for writing step handlers
 
@@ -283,6 +259,40 @@ registration anywhere in the project populates the one shared registry
 (`default_registry` in Python/TypeScript, `apskit.DefaultRegistry` in Go,
 `aps_kit::default_registry()` in Rust).
 
+## Repository layout
+
+```
+specs/                 vendored copy of the APS spec docs (read these first)
+features/              shared sample Gherkin used by every language's example
+install.sh             prebuilt-binary installer (download + checksum-verify)
+scripts/               install-aps-tools.sh builds the Go binaries from source (contributor path)
+python/                Python implementation + calculator example
+typescript/            TypeScript implementation + calculator example
+go/                    Go implementation + calculator example
+rust/                  Rust implementation + calculator example
+```
+
+Per-language directories all follow the same shape:
+
+```
+<lang>/
+  <library code>                          IR loader, runtime, step-handler registry
+  cmd/acceptance-entrypoint-generator/    APS-conformant generator CLI
+  cmd/aps-adapter/                        runner adapter (persistent NDJSON worker)
+  examples/calculator/                    end-to-end demo
+  scripts/acceptance.sh                   normal acceptance pipeline
+  scripts/acceptance-mutation.sh          acceptance-mutation pipeline
+```
+
+## Reading the spec
+
+Read the vendored spec docs in this order:
+
+1. [`specs/APS-README.md`](specs/APS-README.md) — pipeline shape and component map.
+2. [`specs/parser-spec.md`](specs/parser-spec.md) — the JSON IR this kit consumes.
+3. [`specs/acceptance-generator.md`](specs/acceptance-generator.md) — generator command, runtime contract, step-handler contract, metadata, hashing.
+4. [`specs/mutator-spec.md`](specs/mutator-spec.md) — mutator behavior and the runner-adapter protocol.
+
 ## Conformance to the APS spec
 
 The kit is built strictly against the three spec docs vendored at
@@ -318,7 +328,7 @@ example commits the resulting `acceptance-mutation-manifest` back into its
 feature file. Re-verify any language yourself with
 `<lang>/scripts/acceptance-mutation.sh` after `./install.sh`.
 
-## Contributor / maintainer: build the APS binaries from source
+## Appendix: contributors and maintainers
 
 The drop-in path above (`./install.sh`) is how consumers should install the
 APS binaries. The from-source build below exists for **contributors** working
